@@ -21,6 +21,9 @@ import org.apache.dubbo.common.URL;
 
 import java.util.Collections;
 
+/**
+ * 注册表工厂包装器
+ */
 public class RegistryFactoryWrapper implements RegistryFactory {
     private RegistryFactory registryFactory;
 

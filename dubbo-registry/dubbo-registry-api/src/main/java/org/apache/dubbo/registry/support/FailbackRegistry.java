@@ -191,6 +191,10 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
 
+    /**
+     * 注册URL
+     * @param url
+     */
     @Override
     public void register(URL url) {
         if (!acceptable(url)) {
@@ -201,8 +205,8 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         removeFailedRegistered(url);
         removeFailedUnregistered(url);
         try {
-            // Sending a registration request to the server side
-            doRegister(url);
+            // Sending a registration request to the server side 发送注册请求到服务端
+            doRegister(url);//ZookeeperRegistry#doRegister,ZK创建节点
         } catch (Exception e) {
             Throwable t = e;
 

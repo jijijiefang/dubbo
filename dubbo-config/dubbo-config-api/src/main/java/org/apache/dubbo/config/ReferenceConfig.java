@@ -377,6 +377,11 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         return map;
     }
 
+    /**
+     * 创建动态代理
+     * @param referenceParameters
+     * @return
+     */
     @SuppressWarnings({"unchecked"})
     private T createProxy(Map<String, String> referenceParameters) {
         if (shouldJvmRefer(referenceParameters)) {
@@ -482,6 +487,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
     /**
      * Make a remote reference, create a remote reference invoker
+     * 创建远程引用，创建远程引用调用程序
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void createInvokerForRemote() {

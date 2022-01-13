@@ -208,13 +208,16 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         serviceMetadata.generateServiceKey();
     }
 
+    /**
+     * 服务导出
+     */
     @Override
     public void export() {
         if (this.exported) {
             return;
         }
 
-        // ensure start module, compatible with old api usage
+        // ensure start module, compatible with old api usage 确保启动模块与旧api用法兼容
         getScopeModel().getDeployer().start();
 
         synchronized (this) {
@@ -348,6 +351,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         checkAndUpdateSubConfigs();
     }
 
+    /**
+     * 服务导出
+     */
     protected synchronized void doExport() {
         if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
@@ -363,6 +369,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         exported();
     }
 
+    /**
+     * 导出URL
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
         ModuleServiceRepository repository = getScopeModel().getServiceRepository();
@@ -384,20 +393,30 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                     .orElse(path), group, version);
             // In case user specified path, register service one more time to map it to path.
             repository.registerService(pathKey, interfaceClass);
+            //registryURLs =
+            // {
+            //  service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=18416&registry=zookeeper&timestamp=1641974812738
+            //  registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=18416&registry=zookeeper&timestamp=1641974812738
+            // }
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
     }
 
+    /**
+     * 为每一个协议导出URL
+     * @param protocolConfig
+     * @param registryURLs
+     */
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         Map<String, String> map = buildAttributes(protocolConfig);
 
-        // remove null key and null value
+        // remove null key and null value 移除空key和空value
         map.keySet().removeIf(key -> key == null || map.get(key) == null);
-        // init serviceMetadata attachments
+        // init serviceMetadata attachments 初始化服务元数据附件
         serviceMetadata.getAttachments().putAll(map);
-
+        //<dubbo:protocol port="-1" name="dubbo" />
         URL url = buildUrl(protocolConfig, map);
-
+        //url = dubbo://10.2.117.98:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&background=false&bind.ip=10.2.117.98&bind.port=20880&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=21512&release=&side=provider&timestamp=1641970070068
         exportUrl(url, registryURLs);
     }
 
@@ -533,13 +552,20 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
     }
 
+    /**
+     * 根据协议配置构建URL
+     * @param protocolConfig
+     * @param params
+     * @return
+     */
     private URL buildUrl(ProtocolConfig protocolConfig, Map<String, String> params) {
         String name = protocolConfig.getName();
+        //默认为"dubbo"
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
         }
 
-        // export service
+        // export service 导出服务
         String host = findConfiguredHosts(protocolConfig, provider, params);
         Integer port = findConfiguredPort(protocolConfig, provider, this.getExtensionLoader(Protocol.class), name, params);
         URL url = new ServiceConfigURL(name, null, null, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), params);
@@ -555,17 +581,25 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         return url;
     }
 
+    /**
+     * 导出URL
+     * @param url
+     * @param registryURLs
+     */
     private void exportUrl(URL url, List<URL> registryURLs) {
         String scope = url.getParameter(SCOPE_KEY);
         // don't export when none is configured
+        // 配置为none不导出，<dubbo:service scope="none" />
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
 
             // export to local if the config is not remote (export to remote only when config is remote)
+            // 导出到本地，<dubbo:service scope="local" />
             if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
                 exportLocal(url);
             }
 
             // export to remote if the config is not local (export to local only when config is local)
+            // 导出到远程，<dubbo:service scope="remote" />
             if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {
                 url = exportRemote(url, registryURLs);
                 if (!isGeneric(generic) && !isMetadataService(interfaceName)) {
@@ -579,14 +613,26 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         this.urls.add(url);
     }
 
+    /**
+     * 导出到远程
+     * @param url
+     * @param registryURLs
+     * @return
+     */
     private URL exportRemote(URL url, List<URL> registryURLs) {
         if (CollectionUtils.isNotEmpty(registryURLs)) {
+            //registryURLs =
+            // {
+            //  service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=18416&registry=zookeeper&timestamp=1641974812738
+            //  registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=18416&registry=zookeeper&timestamp=1641974812738
+            // }
             for (URL registryURL : registryURLs) {
+                //"service-discovery-registry"服务发现协议
                 if (SERVICE_REGISTRY_PROTOCOL.equals(registryURL.getProtocol())) {
                     url = url.addParameterIfAbsent(SERVICE_NAME_MAPPING_KEY, "true");
                 }
 
-                //if protocol is only injvm ,not register
+                //if protocol is only injvm ,not register 如果协议是"injvm"，不注册
                 if (LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
                     continue;
                 }
@@ -597,7 +643,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                     url = url.putAttribute(MONITOR_KEY, monitorUrl);
                 }
 
-                // For providers, this is used to enable custom proxy to generate invoker
+                // For providers, this is used to enable custom proxy to generate invoker 对于提供者，这用于启用自定义代理以生成调用程序
                 String proxy = url.getParameter(PROXY_KEY);
                 if (StringUtils.isNotEmpty(proxy)) {
                     registryURL = registryURL.addParameter(PROXY_KEY, proxy);
@@ -610,7 +656,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url.getServiceKey());
                     }
                 }
-
+                //protocol:service-discovery-registry,RegistryProtocol
+                //protocol:registry,InterfaceCompatibleRegistryProtocol
                 doExportUrl(registryURL.putAttribute(EXPORT_KEY, url), true);
             }
 
@@ -627,12 +674,18 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         return url;
     }
 
+    /**
+     * 实际导出URL
+     * @param url
+     * @param withMetaData
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrl(URL url, boolean withMetaData) {
         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);
         if (withMetaData) {
             invoker = new DelegateProviderMetaDataInvoker(invoker, this);
         }
+        //根据protocol获取protocolSPI
         Exporter<?> exporter = protocolSPI.export(invoker);
         exporters.add(exporter);
     }
@@ -640,6 +693,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     /**
      * always export injvm
+     * 总是导出injvm
      */
     private void exportLocal(URL url) {
         URL local = URLBuilder.from(url)
@@ -649,6 +703,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 .build();
         local = local.setScopeModel(getScopeModel())
             .setServiceModel(providerModel);
+        //protocol:injvm,InjvmProtocol#export
         doExportUrl(local, false);
         logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry url : " + local);
     }

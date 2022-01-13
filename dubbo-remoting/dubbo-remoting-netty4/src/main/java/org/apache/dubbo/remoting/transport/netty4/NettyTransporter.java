@@ -30,8 +30,16 @@ public class NettyTransporter implements Transporter {
 
     public static final String NAME = "netty";
 
+    /**
+     * 构造Netty服务端
+     * @param url server url
+     * @param handler
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException {
+        //
         return new NettyServer(url, handler);
     }
 

@@ -310,18 +310,22 @@ public class DubboProtocol extends AbstractProtocol {
 
             }
         }
-
+        //初始化并开启Netty服务端或重置
         openServer(url);
         optimizeSerialization(url);
 
         return exporter;
     }
 
+    /**
+     * 开启Netty服务端
+     * @param url
+     */
     private void openServer(URL url) {
         checkDestroyed();
-        // find server.
+        // find server.查询服务端
         String key = url.getAddress();
-        // client can export a service which only for server to invoke
+        // client can export a service which only for server to invoke 客户端可以导出仅由服务器调用的服务
         boolean isServer = url.getParameter(IS_SERVER_KEY, true);
         if (isServer) {
             ProtocolServer server = serverMap.get(key);
@@ -335,7 +339,7 @@ public class DubboProtocol extends AbstractProtocol {
                     }
                 }
             } else {
-                // server supports reset, use together with override
+                // server supports reset, use together with override 服务器支持重置，与覆盖一起使用
                 server.reset(url);
             }
         }
@@ -347,6 +351,11 @@ public class DubboProtocol extends AbstractProtocol {
         }
     }
 
+    /**
+     * 创建Netty服务端
+     * @param url
+     * @return
+     */
     private ProtocolServer createServer(URL url) {
         url = URLBuilder.from(url)
                 // send readonly event when server closes, it's enabled by default

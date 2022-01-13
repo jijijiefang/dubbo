@@ -516,6 +516,7 @@ public class ExtensionLoader<T> {
     /**
      * Find the extension with the given name. If the specified name is not found, then {@link IllegalStateException}
      * will be thrown.
+     * 查找具有给定名称的扩展名。如果找不到指定的名称，则将抛出IllegalStateException
      */
     @SuppressWarnings("unchecked")
     public T getExtension(String name) {
@@ -526,6 +527,12 @@ public class ExtensionLoader<T> {
         return extension;
     }
 
+    /**
+     * 查找具有给定名称的扩展名
+     * @param name
+     * @param wrap 默认使用代理
+     * @return
+     */
     public T getExtension(String name, boolean wrap) {
         checkDestroyed();
         if (StringUtils.isEmpty(name)) {
@@ -746,6 +753,12 @@ public class ExtensionLoader<T> {
         return new IllegalStateException(buf.toString());
     }
 
+    /**
+     * 创建扩展
+     * @param name
+     * @param wrap 默认使用代理
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private T createExtension(String name, boolean wrap) {
         Class<?> clazz = getExtensionClasses().get(name);
@@ -822,6 +835,11 @@ public class ExtensionLoader<T> {
         return getExtensionClasses().containsKey(name);
     }
 
+    /**
+     * 注入扩展
+     * @param instance
+     * @return
+     */
     private T injectExtension(T instance) {
 
         if (injector == null) {

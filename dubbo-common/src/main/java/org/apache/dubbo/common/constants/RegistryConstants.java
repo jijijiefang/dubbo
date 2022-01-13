@@ -90,7 +90,7 @@ public interface RegistryConstants {
 
     /**
      * The protocol for Service Discovery
-     *
+     * 服务发现协议
      * @since 2.7.5
      */
     String SERVICE_REGISTRY_PROTOCOL = "service-discovery-registry";

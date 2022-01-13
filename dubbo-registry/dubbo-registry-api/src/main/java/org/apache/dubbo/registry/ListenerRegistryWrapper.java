@@ -56,6 +56,7 @@ public class ListenerRegistryWrapper implements Registry {
     public void register(URL url) {
         try {
             if (registry != null) {
+                //registry是ZookeeperRegistry，调用FailbackRegistry#register方法
                 registry.register(url);
             }
         } finally {
