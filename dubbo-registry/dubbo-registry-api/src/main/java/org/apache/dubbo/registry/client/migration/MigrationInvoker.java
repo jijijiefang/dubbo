@@ -243,7 +243,7 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         refreshInterfaceInvoker(latch);
         refreshServiceDiscoveryInvoker(latch);
 
-        // directly calculate preferred invoker, will not wait until address notify
+        // directly calculate preferred invoker, will not wait until address notify 直接计算首选调用程序，不会等到以后地址通知时重新进行地址通知计算
         // calculation will re-occurred when address notify later
         calcPreferredInvoker(newRule);
     }
@@ -415,6 +415,10 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         }
     }
 
+    /**
+     * 刷新服务发现Invoker
+     * @param latch
+     */
     protected void refreshServiceDiscoveryInvoker(CountDownLatch latch) {
         clearListener(serviceDiscoveryInvoker);
         if (needRefresh(serviceDiscoveryInvoker)) {
@@ -439,6 +443,10 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         });
     }
 
+    /**
+     * 刷新接口Invoker
+     * @param latch
+     */
     protected void refreshInterfaceInvoker(CountDownLatch latch) {
         clearListener(invoker);
         if (needRefresh(invoker)) {
@@ -449,6 +457,7 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
             if (invoker != null) {
                 invoker.destroy();
             }
+            //InterfaceCompatibleRegistryProtocol#getInvoker
             invoker = registryProtocol.getInvoker(cluster, registry, type, url);
         }
         setListener(invoker, () -> {
@@ -463,14 +472,19 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         });
     }
 
+    /**
+     * 计算首选Invoker
+     * @param migrationRule
+     */
     private synchronized void calcPreferredInvoker(MigrationRule migrationRule) {
+        //invoker是MockClusterInvoker
         if (serviceDiscoveryInvoker == null || invoker == null) {
             return;
         }
         Set<MigrationAddressComparator> detectors = ScopeModelUtil.getApplicationModel(consumerUrl == null ? null : consumerUrl.getScopeModel())
             .getExtensionLoader(MigrationAddressComparator.class).getSupportedExtensionInstances();
         if (CollectionUtils.isNotEmpty(detectors)) {
-            // pick preferred invoker
+            // pick preferred invoker 选择首选Invoker
             // the real invoker choice in invocation will be affected by promotion
             if (detectors.stream().allMatch(comparator -> comparator.shouldMigrate(serviceDiscoveryInvoker, invoker, migrationRule))) {
                 this.currentAvailableInvoker = serviceDiscoveryInvoker;

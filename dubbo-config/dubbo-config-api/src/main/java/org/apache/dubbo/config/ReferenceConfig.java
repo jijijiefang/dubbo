@@ -95,22 +95,26 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     /**
      * The {@link Protocol} implementation with adaptive functionality,it will be different in different scenarios.
      * A particular {@link Protocol} implementation is determined by the protocol attribute in the {@link URL}.
+     * 协议实现具有自适应功能，在不同的场景下会有所不同。特定的协议实现由URL中的协议属性确定。
      * For example:
-     *
+     * 例如：
      * <li>when the url is registry://224.5.6.7:1234/org.apache.dubbo.registry.RegistryService?application=dubbo-sample,
      * then the protocol is <b>RegistryProtocol</b></li>
-     *
+     * 当url为registry://224.5.6.7:1234/org.apache.dubbo.registry.RegistryService?application=dubbo-示例，则协议为RegistryProtocol
      * <li>when the url is dubbo://224.5.6.7:1234/org.apache.dubbo.config.api.DemoService?application=dubbo-sample, then
      * the protocol is <b>DubboProtocol</b></li>
+     * 当url为dubbo://224.5.6.7:1234/org.apache.dubbo.config.api.DemoService?application=dubbo-示例，则协议为DubboProtocol
      * <p>
      * Actually，when the {@link ExtensionLoader} init the {@link Protocol} instants,it will automatically wrap three
      * layers, and eventually will get a <b>ProtocolSerializationWrapper</b> or <b>ProtocolFilterWrapper</b> or <b>ProtocolListenerWrapper</b>
+     * 实际上，当ExtensionLoader初始化协议实例时，它将自动包装三层，最终将得到ProtocolSerializationWrapper或ProtocolFilterWrapper或ProtocolListenerWrapper
      */
     private Protocol protocolSPI;
 
     /**
      * A {@link ProxyFactory} implementation that will generate a reference service's proxy,the JavassistProxyFactory is
      * its default implementation
+     * 将生成引用服务的代理的ProxyFactory实现，JavassistProxyFactory是其默认实现
      */
     private ProxyFactory proxyFactory;
 
@@ -118,27 +122,31 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
     /**
      * The interface proxy reference
+     * 接口代理引用
      */
     private transient volatile T ref;
 
     /**
      * The invoker of the reference service
+     * 引用服务的调用程序
      */
     private transient volatile Invoker<?> invoker;
 
     /**
      * The flag whether the ReferenceConfig has been initialized
+     * 是否已初始化ReferenceConfig的标志
      */
     private transient volatile boolean initialized;
 
     /**
      * whether this ReferenceConfig has been destroyed
+     * 此引用配置是否已被销毁
      */
     private transient volatile boolean destroyed;
 
     /**
      * The service names that the Dubbo interface subscribed.
-     *
+     * Dubbo接口订阅的服务名称
      * @since 2.7.8
      */
     private String services;
@@ -255,7 +263,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             this.refresh();
         }
 
-        // init serviceMetadata
+        // init serviceMetadata 初始化服务元数据
         initServiceMetadata(consumer);
 
         serviceMetadata.setServiceType(getServiceInterfaceClass());
@@ -408,9 +416,10 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             referenceParameters.get(INTERFACE_KEY), referenceParameters);
         consumerUrl = consumerUrl.setScopeModel(getScopeModel());
         consumerUrl = consumerUrl.setServiceModel(consumerModel);
+        //发布服务定义
         MetadataUtils.publishServiceDefinition(interfaceName, consumerUrl, getScopeModel(), getApplicationModel());
 
-        // create service proxy
+        // create service proxy 创建服务代理对象
         return (T) proxyFactory.getProxy(invoker, ProtocolUtils.isGeneric(generic));
     }
 
@@ -492,11 +501,14 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void createInvokerForRemote() {
         if (urls.size() == 1) {
+            //curUrl = registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-consumer&dubbo=2.0.2&pid=21776&registry=zookeeper&timestamp=1642045845510
             URL curUrl = urls.get(0);
+            //根据curUrl获取protocolSPI是InterfaceCompatibleRegistryProtocol
             invoker = protocolSPI.refer(interfaceClass, curUrl);
             if (!UrlUtils.isRegistry(curUrl)){
                 List<Invoker<?>> invokers = new ArrayList<>();
                 invokers.add(invoker);
+                //默认设置是FailoverCluster，返回FailoverClusterInvoker
                 invoker = Cluster.getCluster(scopeModel, Cluster.DEFAULT).join(new StaticDirectory(curUrl, invokers), true);
             }
         } else {

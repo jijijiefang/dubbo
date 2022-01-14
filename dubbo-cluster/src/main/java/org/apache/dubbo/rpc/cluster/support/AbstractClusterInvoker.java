@@ -135,18 +135,19 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     }
 
     /**
-     * Select a invoker using loadbalance policy.</br>
+     * Select a invoker using loadbalance policy.</br> 使用loadbalance策略选择调用程序
      * a) Firstly, select an invoker using loadbalance. If this invoker is in previously selected list, or,
      * if this invoker is unavailable, then continue step b (reselect), otherwise return the first selected invoker</br>
+     * 首先，使用loadbalance选择一个调用程序。如果此调用程序位于先前选择的列表中，或者如果此调用程序不可用，则继续步骤
      * <p>
      * b) Reselection, the validation rule for reselection: selected > available. This rule guarantees that
      * the selected invoker has the minimum chance to be one in the previously selected list, and also
      * guarantees this invoker is available.
-     *
-     * @param loadbalance load balance policy
+     * 重新选择，重新选择的验证规则：selected>available。此规则保证所选调用程序有最小的机会成为先前所选列表中的调用程序，并且还保证此调用程序可用
+     * @param loadbalance load balance policy 复制均衡策略
      * @param invocation  invocation
-     * @param invokers    invoker candidates
-     * @param selected    exclude selected invokers or not
+     * @param invokers    invoker candidates 候选的Invoker
+     * @param selected    exclude selected invokers or not 是否排除已选过的调用程序
      * @return the invoker which will final to do invoke.
      * @throws RpcException exception
      */
@@ -165,13 +166,13 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         if (stickyInvoker != null && !invokers.contains(stickyInvoker)) {
             stickyInvoker = null;
         }
-        //ignore concurrency problem
+        //ignore concurrency problem 忽略并发问题
         if (sticky && stickyInvoker != null && (selected == null || !selected.contains(stickyInvoker))) {
             if (availableCheck && stickyInvoker.isAvailable()) {
                 return stickyInvoker;
             }
         }
-
+        //进行选择Invoker
         Invoker<T> invoker = doSelect(loadbalance, invocation, invokers, selected);
 
         if (sticky) {
@@ -181,6 +182,15 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         return invoker;
     }
 
+    /**
+     * 使用负载均衡策略进行选择Invoker
+     * @param loadbalance
+     * @param invocation
+     * @param invokers
+     * @param selected
+     * @return
+     * @throws RpcException
+     */
     private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
 
@@ -329,9 +339,11 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
 //        }
 
         InvocationProfilerUtils.enterDetailProfiler(invocation, () -> "Router route.");
+        //使用DynamicDirectory#list，列出所有Invoker
         List<Invoker<T>> invokers = list(invocation);
         InvocationProfilerUtils.releaseDetailProfiler(invocation);
 
+        //初始化负载均衡，默认随机负载均衡
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
 
@@ -368,6 +380,12 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         }
     }
 
+    /**
+     *  使用上下文调用
+     * @param invoker
+     * @param invocation
+     * @return
+     */
     protected Result invokeWithContext(Invoker<T> invoker, Invocation invocation) {
         setContext(invoker);
         Result result;
@@ -409,11 +427,12 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
 
     /**
      * Init LoadBalance.
+     * 初始化负载平衡。
      * <p>
      * if invokers is not empty, init from the first invoke's url and invocation
      * if invokes is empty, init a default LoadBalance(RandomLoadBalance)
      * </p>
-     *
+     * 如果调用程序不为空，则从第一个调用的url初始化，如果调用为空，则初始化默认的LoadBalance（RandomLoadBalance）
      * @param invokers   invokers
      * @param invocation invocation
      * @return LoadBalance instance. if not need init, return null.

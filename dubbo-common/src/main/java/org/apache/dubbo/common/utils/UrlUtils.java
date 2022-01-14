@@ -481,6 +481,11 @@ public class UrlUtils {
             PROVIDERS_CATEGORY.equals(url.getCategory(PROVIDERS_CATEGORY));
     }
 
+    /**
+     * 是否是注册中心协议
+     * @param url
+     * @return
+     */
     public static boolean isRegistry(URL url) {
         return REGISTRY_PROTOCOL.equals(url.getProtocol())
             || SERVICE_REGISTRY_PROTOCOL.equalsIgnoreCase(url.getProtocol())

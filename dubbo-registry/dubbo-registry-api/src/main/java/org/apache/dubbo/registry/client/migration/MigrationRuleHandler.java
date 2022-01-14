@@ -43,7 +43,7 @@ public class MigrationRuleHandler<T> {
             return;
         }
 
-        // initial step : APPLICATION_FIRST
+        // initial step : APPLICATION_FIRST 初始步骤：首先应用程序
         MigrationStep step = MigrationStep.APPLICATION_FIRST;
         float threshold = -1f;
 
@@ -60,6 +60,13 @@ public class MigrationRuleHandler<T> {
         }
     }
 
+    /**
+     * 刷新Invoker
+     * @param step
+     * @param threshold
+     * @param newRule
+     * @return
+     */
     private boolean refreshInvoker(MigrationStep step, Float threshold, MigrationRule newRule) {
         if (step == null || threshold == null) {
             throw new IllegalStateException("Step or threshold of migration rule cannot be null");

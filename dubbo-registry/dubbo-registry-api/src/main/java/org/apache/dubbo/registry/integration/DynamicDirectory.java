@@ -178,7 +178,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
     @Override
     public List<Invoker<T>> doList(BitList<Invoker<T>> invokers, Invocation invocation) {
         if (forbidden && shouldFailFast) {
-            // 1. No service provider 2. Service providers are disabled
+            // 1. No service provider 2. Service providers are disabled 1. 没有服务提供者 2.服务提供者被禁用
             throw new RpcException(RpcException.FORBIDDEN_EXCEPTION, "No provider available from registry " +
                 getUrl().getAddress() + " for service " + getConsumerUrl().getServiceKey() + " on consumer " +
                 NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion() +
@@ -190,7 +190,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         }
 
         try {
-            // Get invokers from cache, only runtime routers will be executed.
+            // Get invokers from cache, only runtime routers will be executed. 从缓存中获取调用程序，将只执行运行时路由器。
             List<Invoker<T>> result = routerChain.route(getConsumerUrl(), invokers, invocation);
             return result == null ? BitList.emptyList() : result;
         } catch (Throwable t) {

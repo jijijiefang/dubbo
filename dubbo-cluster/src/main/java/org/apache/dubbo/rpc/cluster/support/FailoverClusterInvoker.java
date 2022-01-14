@@ -40,9 +40,10 @@ import static org.apache.dubbo.common.constants.CommonConstants.RETRIES_KEY;
 /**
  * When invoke fails, log the initial error and retry other invokers (retry n times, which means at most n different invokers will be invoked)
  * Note that retry causes latency.
+ * 调用失败时，记录初始错误并重试其他调用程序（重试n次，这意味着最多将调用n个不同的调用程序）。请注意，重试会导致延迟
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Failover">Failover</a>
- *
+ * 故障转移Invoker
  */
 public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
@@ -59,19 +60,20 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         checkInvokers(copyInvokers, invocation);
         String methodName = RpcUtils.getMethodName(invocation);
         int len = calculateInvokeTimes(methodName);
-        // retry loop.
-        RpcException le = null; // last exception.
-        List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
+        // retry loop. 重试周期
+        RpcException le = null; // last exception. 最后的异常
+        List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers. 已经调用过的Invoker
         Set<String> providers = new HashSet<String>(len);
         for (int i = 0; i < len; i++) {
-            //Reselect before retry to avoid a change of candidate `invokers`.
-            //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
+            //Reselect before retry to avoid a change of candidate `invokers`. 在重试之前重新选择，以避免更改候选“调用程序”
+            //NOTE: if `invokers` changed, then `invoked` also lose accuracy. 注意：如果'invokers'更改，那么'invoked'也将失去准确性
             if (i > 0) {
                 checkWhetherDestroyed();
                 copyInvokers = list(invocation);
                 // check again
                 checkInvokers(copyInvokers, invocation);
             }
+            //选择一个Invoker
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
             invoked.add(invoker);
             RpcContext.getServiceContext().setInvokers((List) invoked);

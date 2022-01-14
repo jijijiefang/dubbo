@@ -502,7 +502,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
                 return doRefer(Cluster.getCluster(url.getScopeModel(), MergeableCluster.NAME), registry, type, url, qs);
             }
         }
-
+        //MockClusterWrapper
         Cluster cluster = Cluster.getCluster(url.getScopeModel(), qs.get(CLUSTER_KEY));
         return doRefer(cluster, registry, type, url, qs);
     }
@@ -529,6 +529,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
             consumerAttribute);
         url = url.putAttribute(CONSUMER_URL_KEY, consumerUrl);
         //zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-consumer&dubbo=2.0.2&pid=20092&timestamp=1641989296462
+        //registryProtocol是InterfaceCompatibleRegistryProtocol#getMigrationInvoker
         ClusterInvoker<T> migrationInvoker =  getMigrationInvoker(this, cluster, registry, type, url, consumerUrl);
         //监听器
         return interceptInvoker(migrationInvoker, url, consumerUrl, url);
@@ -579,6 +580,15 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
         return doCreateInvoker(directory, cluster, registry, type);
     }
 
+    /**
+     * 创建Invoker
+     * @param directory
+     * @param cluster
+     * @param registry
+     * @param type
+     * @param <T>
+     * @return
+     */
     protected <T> ClusterInvoker<T> doCreateInvoker(DynamicDirectory<T> directory, Cluster cluster, Registry registry, Class<T> type) {
         directory.setRegistry(registry);
         directory.setProtocol(protocol);
@@ -594,6 +604,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
             registry.register(directory.getRegisteredConsumerUrl());
         }
         directory.buildRouterChain(urlToRegistry);
+        //订阅服务
         directory.subscribe(toSubscribeUrl(urlToRegistry));
 
         return (ClusterInvoker<T>) cluster.join(directory, true);
