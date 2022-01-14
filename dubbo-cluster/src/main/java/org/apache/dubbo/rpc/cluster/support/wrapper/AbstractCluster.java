@@ -71,6 +71,10 @@ public abstract class AbstractCluster implements Cluster {
 
     protected abstract <T> AbstractClusterInvoker<T> doJoin(Directory<T> directory) throws RpcException;
 
+    /**
+     * 集群过滤
+     * @param <T>
+     */
     static class ClusterFilterInvoker<T> extends AbstractClusterInvoker<T> {
         private ClusterInvoker<T> filterInvoker;
 

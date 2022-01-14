@@ -45,6 +45,7 @@ import static org.apache.dubbo.rpc.Constants.ASYNC_KEY;
 import static org.apache.dubbo.rpc.Constants.MERGER_KEY;
 
 /**
+ * 可合并集群
  * @param <T>
  */
 @SuppressWarnings("unchecked")

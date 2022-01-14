@@ -31,6 +31,7 @@ import java.util.List;
 
 /**
  * BroadcastClusterInvoker
+ * 广播集群
  */
 public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 

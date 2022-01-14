@@ -38,12 +38,13 @@ import static org.apache.dubbo.common.constants.RegistryConstants.ZONE_KEY;
 
 /**
  * When there're more than one registry for subscription.
+ * 当有多个注册表可供订阅时。
  * <p>
- * This extension provides a strategy to decide how to distribute traffics among them:
- * 1. registry marked as 'preferred=true' has the highest priority.
- * 2. check the zone the current request belongs, pick the registry that has the same zone first.
- * 3. Evenly balance traffic between all registries based on each registry's weight.
- * 4. Pick anyone that's available.
+ * This extension provides a strategy to decide how to distribute traffics among them: 这个扩展提供了一个策略来决定如何在它们之间分配流量：
+ * 1. registry marked as 'preferred=true' has the highest priority. 标记为“preferred=true”的注册表具有最高优先级
+ * 2. check the zone the current request belongs, pick the registry that has the same zone first. 检查当前请求所属的区域，首先选择具有相同区域的注册表
+ * 3. Evenly balance traffic between all registries based on each registry's weight.根据每个注册表的权重均衡所有注册表之间的流量
+ * 4. Pick anyone that's available.挑选任何可用的
  */
 public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
 

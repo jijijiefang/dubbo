@@ -284,6 +284,10 @@ public class ConnectivityValidationTest {
         Assertions.assertTrue(directory.list(invocation).size() > 1);
     }
 
+    /**
+     * 连接群集
+     * @param <T>
+     */
     private static class ConnectivityClusterInvoker<T> extends AbstractClusterInvoker<T> {
         public ConnectivityClusterInvoker(Directory<T> directory) {
             super(directory);

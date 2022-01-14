@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * Execute exactly once, which means this policy will throw an exception immediately in case of an invocation error.
  * Usually used for non-idempotent write operations
- *
+ * 只执行一次，这意味着如果发生调用错误，此策略将立即引发异常。通常用于非幂等写操作，失败速度快
  * <a href="http://en.wikipedia.org/wiki/Fail-fast">Fail-fast</a>
  */
 public class FailfastClusterInvoker<T> extends AbstractClusterInvoker<T> {
