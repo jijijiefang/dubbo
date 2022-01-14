@@ -61,7 +61,7 @@ public class GenericImplFilter implements Filter, Filter.Listener {
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         String generic = invoker.getUrl().getParameter(GENERIC_KEY);
-        // calling a generic impl service
+        // calling a generic impl service 调用通用impl服务
         if (isCallingGenericImpl(generic, invocation)) {
             RpcInvocation invocation2 = new RpcInvocation(invocation);
 
@@ -100,7 +100,7 @@ public class GenericImplFilter implements Filter, Filter.Listener {
             invocation2.setArguments(new Object[]{methodName, types, args});
             return invoker.invoke(invocation2);
         }
-        // making a generic call to a normal service
+        // making a generic call to a normal service 对正常服务进行一般调用
         else if (isMakingGenericCall(generic, invocation)) {
 
             Object[] args = (Object[]) invocation.getArguments()[2];
