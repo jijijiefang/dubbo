@@ -491,6 +491,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
         //RegistryFactoryWrapper包装的ZookeeperRegistryFactory
         Registry registry = getRegistry(url);
         if (RegistryService.class.equals(type)) {
+            //JavassistProxyFactory#getInvoker
             return proxyFactory.getInvoker((T) registry, type, url);
         }
 

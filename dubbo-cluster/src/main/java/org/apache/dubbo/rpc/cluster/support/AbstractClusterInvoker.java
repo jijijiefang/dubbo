@@ -441,6 +441,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         ApplicationModel applicationModel = ScopeModelUtil.getApplicationModel(invocation.getModuleModel());
         if (CollectionUtils.isNotEmpty(invokers)) {
             return applicationModel.getExtensionLoader(LoadBalance.class).getExtension(
+                //获取负载均衡策略，找不到使用默认负载均衡策略为"random"
                 invokers.get(0).getUrl().getMethodParameter(
                     RpcUtils.getMethodName(invocation), LOADBALANCE_KEY, DEFAULT_LOADBALANCE
                 )

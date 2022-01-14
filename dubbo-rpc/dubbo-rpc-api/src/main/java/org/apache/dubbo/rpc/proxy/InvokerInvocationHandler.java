@@ -77,7 +77,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         String serviceKey = url.getServiceKey();
         rpcInvocation.setTargetServiceUniqueName(serviceKey);
 
-        // invoker.getUrl() returns consumer url.
+        // invoker.getUrl() returns consumer url. 返回消费者URL
         RpcServiceContext.setRpcContext(url);
 
         if (serviceModel instanceof ConsumerModel) {
@@ -97,6 +97,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
             }
             rpcInvocation.put(Profiler.PROFILER_KEY, bizProfiler);
             try {
+                //RPC调用
                 return invoker.invoke(rpcInvocation).recreate();
             } finally {
                 Profiler.release(bizProfiler);

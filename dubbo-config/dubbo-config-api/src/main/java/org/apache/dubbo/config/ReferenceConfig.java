@@ -253,6 +253,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         }
     }
 
+    /**
+     * 服务引用初始化
+     */
     protected synchronized void init() {
         if (initialized) {
             return;
@@ -282,7 +285,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         repository.registerConsumer(consumerModel);
 
         serviceMetadata.getAttachments().putAll(referenceParameters);
-
+        //创建服务的动态代理对象
         ref = createProxy(referenceParameters);
 
         serviceMetadata.setTarget(ref);
@@ -397,7 +400,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         } else {
             urls.clear();
             if (StringUtils.isNotEmpty(url)) {
-                // user specified URL, could be peer-to-peer address, or register center's address.
+                // user specified URL, could be peer-to-peer address, or register center's address. 用户指定的URL可以是直连地址，也可以是注册中心的地址。
                 parseUrl(referenceParameters);
             } else {
                 // if protocols not in jvm checkRegistry

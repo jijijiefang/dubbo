@@ -178,7 +178,7 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
         }
 
         BitList<Invoker<T>> availableInvokers;
-        // use clone to avoid being modified at doList().
+        // use clone to avoid being modified at doList().使用clone方式避免修改
         if (invokersInitialized) {
             availableInvokers = validInvokers.clone();
         } else {
