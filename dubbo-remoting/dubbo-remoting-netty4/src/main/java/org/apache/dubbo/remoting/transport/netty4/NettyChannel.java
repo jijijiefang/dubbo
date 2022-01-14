@@ -146,7 +146,7 @@ final class NettyChannel extends AbstractChannel {
 
     /**
      * Send message by netty and whether to wait the completion of the send.
-     *
+     * 通过netty发送消息以及是否等待发送完成
      * @param message message that need send.
      * @param sent    whether to ack async-sent
      * @throws RemotingException throw RemotingException if wait until timeout or any exception thrown by method body that surrounded by try-catch.
@@ -161,7 +161,7 @@ final class NettyChannel extends AbstractChannel {
         try {
             ChannelFuture future = channel.writeAndFlush(message);
             if (sent) {
-                // wait timeout ms
+                // wait timeout ms 等待超时
                 timeout = getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
                 success = future.await(timeout);
             }

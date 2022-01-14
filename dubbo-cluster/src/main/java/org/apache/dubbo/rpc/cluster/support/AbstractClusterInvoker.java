@@ -202,22 +202,25 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
             checkShouldInvalidateInvoker(tInvoker);
             return tInvoker;
         }
+        //负载均衡策略选择
         Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
 
-        //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
+        //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.如果选择出来的invoker在已选择集合中或不可用的，重新选择
         boolean isSelected = selected != null && selected.contains(invoker);
         boolean isUnavailable = availableCheck && !invoker.isAvailable() && getUrl() != null;
 
         if (isUnavailable) {
+            //加入无效的Invoker
             invalidateInvoker(invoker);
         }
         if (isSelected || isUnavailable) {
             try {
+                //重新选择
                 Invoker<T> rInvoker = reselect(loadbalance, invocation, invokers, selected, availableCheck);
                 if (rInvoker != null) {
                     invoker = rInvoker;
                 } else {
-                    //Check the index of current selected invoker, if it's not the last one, choose the one at index+1.
+                    //Check the index of current selected invoker, if it's not the last one, choose the one at index+1. 检查当前所选调用程序的索引，如果不是最后一个，请选择索引+1处的索引
                     int index = invokers.indexOf(invoker);
                     try {
                         //Avoid collision
@@ -237,7 +240,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     /**
      * Reselect, use invokers not in `selected` first, if all invokers are in `selected`,
      * just pick an available one using loadbalance policy.
-     *
+     * 重新选择，首先使用不在'selected'中的调用程序，如果所有调用程序都在'selected'中，只需使用loadbalance策略选择一个可用的调用程序即可
      * @param loadbalance    load balance policy
      * @param invocation     invocation
      * @param invokers       invoker candidates
@@ -249,20 +252,20 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     private Invoker<T> reselect(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected, boolean availableCheck) throws RpcException {
 
-        // Allocating one in advance, this list is certain to be used.
+        // Allocating one in advance, this list is certain to be used. 提前分配一个，此列表肯定会被使用 reselectCount默认为10
         List<Invoker<T>> reselectInvokers = new ArrayList<>(Math.min(invokers.size(), reselectCount));
 
-        // 1. Try picking some invokers not in `selected`.
-        //    1.1. If all selectable invokers' size is smaller than reselectCount, just add all
-        //    1.2. If all selectable invokers' size is greater than reselectCount, randomly select reselectCount.
-        //            The result size of invokers might smaller than reselectCount due to disAvailable or de-duplication (might be zero).
-        //            This means there is probable that reselectInvokers is empty however all invoker list may contain available invokers.
-        //            Use reselectCount can reduce retry times if invokers' size is huge, which may lead to long time hang up.
+        // 1. Try picking some invokers not in `selected`. 尝试选择一些不在“选定”中的调用程序
+        //    1.1. If all selectable invokers' size is smaller than reselectCount, just add all 如果所有可选调用程序的大小都小于reselectCount，则只需添加全部
+        //    1.2. If all selectable invokers' size is greater than reselectCount, randomly select reselectCount. 如果所有可选调用程序的大小都大于reselectCount，则随机选择reselectCount
+        //            The result size of invokers might smaller than reselectCount due to disAvailable or de-duplication (might be zero). 由于不可用或重复数据消除（可能为零），调用程序的结果大小可能小于reselectCount。
+        //            This means there is probable that reselectInvokers is empty however all invoker list may contain available invokers.这意味着reselectInvokers可能为空，但所有调用程序列表可能包含可用的调用程序。
+        //            Use reselectCount can reduce retry times if invokers' size is huge, which may lead to long time hang up.如果调用程序的大小很大，使用重新选择计数可以减少重试次数，这可能会导致长时间挂起。
         if (reselectCount >= invokers.size()) {
             for (Invoker<T> invoker : invokers) {
-                // check if available
+                // check if available 检查是否可用
                 if (availableCheck && !invoker.isAvailable()) {
-                    // add to invalidate invoker
+                    // add to invalidate invoker 添加到不可用集合
                     invalidateInvoker(invoker);
                     continue;
                 }
@@ -273,44 +276,44 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
             }
         } else {
             for (int i = 0; i < reselectCount; i++) {
-                // select one randomly
+                // select one randomly 随机选择一个
                 Invoker<T> invoker = invokers.get(ThreadLocalRandom.current().nextInt(invokers.size()));
-                // check if available
+                // check if available 检查是否可用
                 if (availableCheck && !invoker.isAvailable()) {
-                    // add to invalidate invoker
+                    // add to invalidate invoker 添加到不可用集合
                     invalidateInvoker(invoker);
                     continue;
                 }
-                // de-duplication
+                // de-duplication 删除重复数据
                 if (selected == null || !selected.contains(invoker) || !reselectInvokers.contains(invoker)) {
                     reselectInvokers.add(invoker);
                 }
             }
         }
 
-        // 2. Use loadBalance to select one (all the reselectInvokers are available)
+        // 2. Use loadBalance to select one (all the reselectInvokers are available) 使用负载均衡策略选择一个（所有重新选择的Invoker都是可用的）
         if (!reselectInvokers.isEmpty()) {
             return loadbalance.select(reselectInvokers, getUrl(), invocation);
         }
 
-        // 3. reselectInvokers is empty. Unable to find at least one available invoker.
-        //    Re-check all the selected invokers. If some in the selected list are available, add to reselectInvokers.
+        // 3. reselectInvokers is empty. Unable to find at least one available invoker.重新选择的Invoker集合如果是空的，找不到至少一个可用的调用程序
+        //    Re-check all the selected invokers. If some in the selected list are available, add to reselectInvokers. 重新检查所有已选择的调用程序，如果选定列表中的某些可用，请添加到reselectInvokers
         if (selected != null) {
             for (Invoker<T> invoker : selected) {
-                if ((invoker.isAvailable()) // available first
+                if ((invoker.isAvailable()) // available first 可用是首位
                     && !reselectInvokers.contains(invoker)) {
                     reselectInvokers.add(invoker);
                 }
             }
         }
 
-        // 4. If reselectInvokers is not empty after re-check.
-        //    Pick an available invoker using loadBalance policy
+        // 4. If reselectInvokers is not empty after re-check. 重新检查后重新选择Invoker集合不为空
+        //    Pick an available invoker using loadBalance policy 使用负载均衡策略选择一个可用的Invoker
         if (!reselectInvokers.isEmpty()) {
             return loadbalance.select(reselectInvokers, getUrl(), invocation);
         }
 
-        // 5. No invoker match, return null.
+        // 5. No invoker match, return null.没有Invoker匹配，返回空
         return null;
     }
 
