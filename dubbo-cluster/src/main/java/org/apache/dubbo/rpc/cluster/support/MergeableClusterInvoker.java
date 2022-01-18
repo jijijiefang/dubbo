@@ -61,7 +61,7 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
     protected Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         checkInvokers(invokers, invocation);
         String merger = getUrl().getMethodParameter(invocation.getMethodName(), MERGER_KEY);
-        if (ConfigUtils.isEmpty(merger)) { // If a method doesn't have a merger, only invoke one Group
+        if (ConfigUtils.isEmpty(merger)) { // If a method doesn't have a merger, only invoke one Group 如果方法没有合并，只调用一组
             for (final Invoker<T> invoker : invokers) {
                 if (invoker.isAvailable()) {
                     try {
@@ -87,6 +87,7 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
         }
 
         Map<String, Result> results = new HashMap<>();
+        //调用所有的
         for (final Invoker<T> invoker : invokers) {
             RpcInvocation subInvocation = new RpcInvocation(invocation, invoker);
             subInvocation.setAttachment(ASYNC_KEY, "true");
@@ -96,7 +97,7 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
         Object result;
 
         List<Result> resultList = new ArrayList<>(results.size());
-
+        //合并结果
         for (Map.Entry<String, Result> entry : results.entrySet()) {
             Result asyncResult = entry.getValue();
             try {
@@ -121,7 +122,7 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
         if (returnType == void.class) {
             return AsyncRpcResult.newDefaultAsyncResult(invocation);
         }
-
+        //分组以.开头则只返回一个结果值
         if (merger.startsWith(".")) {
             merger = merger.substring(1);
             Method method;
@@ -150,6 +151,7 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 throw new RpcException("Can not merge result: " + e.getMessage(), e);
             }
         } else {
+            //返回所有的结果值
             Merger resultMerger;
             ApplicationModel applicationModel = ScopeModelUtil.getApplicationModel(invocation.getModuleModel().getApplicationModel());
 

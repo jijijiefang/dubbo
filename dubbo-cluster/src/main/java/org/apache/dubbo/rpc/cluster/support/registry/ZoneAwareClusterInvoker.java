@@ -57,7 +57,7 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
-        // First, pick the invoker (XXXClusterInvoker) that comes from the local registry, distinguish by a 'preferred' key.
+        // First, pick the invoker (XXXClusterInvoker) that comes from the local registry, distinguish by a 'preferred' key.首先，选择Invoker使用本地注册表，通过'preferred'键来区分
         for (Invoker<T> invoker : invokers) {
             ClusterInvoker<T> clusterInvoker = (ClusterInvoker<T>) invoker;
             if (clusterInvoker.isAvailable() && clusterInvoker.getRegistryUrl()
@@ -66,11 +66,12 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
         }
 
-        // providers in the registry with the same zone
+        // providers in the registry with the same zone 注册表中同一个区域的提供者
         String zone = invocation.getAttachment(REGISTRY_ZONE);
         if (StringUtils.isNotEmpty(zone)) {
             for (Invoker<T> invoker : invokers) {
                 ClusterInvoker<T> clusterInvoker = (ClusterInvoker<T>) invoker;
+                //同一个区域
                 if (clusterInvoker.isAvailable() && zone.equals(clusterInvoker.getRegistryUrl().getParameter(ZONE_KEY))) {
                     return clusterInvoker.invoke(invocation);
                 }
@@ -84,13 +85,13 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
         }
 
 
-        // load balance among all registries, with registry weight count in.
+        // load balance among all registries, with registry weight count in. 所有注册表之间的负载平衡，使用注册表权重计数
         Invoker<T> balancedInvoker = select(loadbalance, invocation, invokers, null);
         if (balancedInvoker.isAvailable()) {
             return balancedInvoker.invoke(invocation);
         }
 
-        // If none of the invokers has a preferred signal or is picked by the loadbalancer, pick the first one available.
+        // If none of the invokers has a preferred signal or is picked by the loadbalancer, pick the first one available. 如果调用程序中没有一个具有首选信号或由负载均衡选择，选择第一个可用的调用
         for (Invoker<T> invoker : invokers) {
             ClusterInvoker<T> clusterInvoker = (ClusterInvoker<T>) invoker;
             if (clusterInvoker.isAvailable()) {
@@ -98,7 +99,7 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
         }
 
-        //if none available,just pick one
+        //if none available,just pick one 如果没有可用的，选择第一个
         return invokers.get(0).invoke(invocation);
     }
 
