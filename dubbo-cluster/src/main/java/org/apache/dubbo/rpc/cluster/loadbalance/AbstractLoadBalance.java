@@ -34,12 +34,13 @@ import static org.apache.dubbo.rpc.cluster.Constants.WEIGHT_KEY;
 
 /**
  * AbstractLoadBalance
+ * 负载均衡抽象类
  */
 public abstract class AbstractLoadBalance implements LoadBalance {
     /**
      * Calculate the weight according to the uptime proportion of warmup time
      * the new weight will be within 1(inclusive) to weight(inclusive)
-     *
+     * 计算预热权重
      * @param uptime the uptime in milliseconds
      * @param warmup the warmup time in milliseconds
      * @param weight the weight of an invoker
@@ -50,6 +51,14 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         return ww < 1 ? 1 : (Math.min(ww, weight));
     }
 
+    /**
+     * 选择
+     * @param invokers   invokers.
+     * @param url        refer url
+     * @param invocation invocation.
+     * @param <T>
+     * @return
+     */
     @Override
     public <T> Invoker<T> select(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         if (CollectionUtils.isEmpty(invokers)) {
@@ -61,13 +70,21 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         return doSelect(invokers, url, invocation);
     }
 
+    /**
+     * 做选择，子类实现
+     * @param invokers
+     * @param url
+     * @param invocation
+     * @param <T>
+     * @return
+     */
     protected abstract <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation);
 
 
     /**
      * Get the weight of the invoker's invocation which takes warmup time into account
      * if the uptime is within the warmup time, the weight will be reduce proportionally
-     *
+     * 获取调用方调用的权重，该权重将预热时间考虑在内。如果正常运行时间在预热时间内，则权重将按比例减少
      * @param invoker    the invoker
      * @param invocation the invocation of this invoker
      * @return weight
@@ -79,6 +96,7 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         if (REGISTRY_SERVICE_REFERENCE_PATH.equals(url.getServiceInterface())) {
             weight = url.getParameter(REGISTRY_KEY + "." + WEIGHT_KEY, DEFAULT_WEIGHT);
         } else {
+            //获取权重值"weight"，获取不到则取默认值100
             weight = url.getMethodParameter(invocation.getMethodName(), WEIGHT_KEY, DEFAULT_WEIGHT);
             if (weight > 0) {
                 long timestamp = invoker.getUrl().getParameter(TIMESTAMP_KEY, 0L);

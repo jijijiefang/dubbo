@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Round robin load balance.
+ * 轮询负载均衡
  */
 public class RoundRobinLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "roundrobin";
@@ -65,7 +66,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
             this.lastUpdate = lastUpdate;
         }
     }
-
+    //调用者所有方法，每个方法是一个map的一个key，每个value是一个map
     private ConcurrentMap<String, ConcurrentMap<String, WeightedRoundRobin>> methodWeightMap = new ConcurrentHashMap<String, ConcurrentMap<String, WeightedRoundRobin>>();
 
     /**
@@ -89,6 +90,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
+
         ConcurrentMap<String, WeightedRoundRobin> map = methodWeightMap.computeIfAbsent(key, k -> new ConcurrentHashMap<>());
         int totalWeight = 0;
         long maxCurrent = Long.MIN_VALUE;
@@ -97,17 +99,20 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         WeightedRoundRobin selectedWRR = null;
         for (Invoker<T> invoker : invokers) {
             String identifyString = invoker.getUrl().toIdentityString();
+            //获取权重值
             int weight = getWeight(invoker, invocation);
+            //此Invoker的权重，不存在则初始化
             WeightedRoundRobin weightedRoundRobin = map.computeIfAbsent(identifyString, k -> {
                 WeightedRoundRobin wrr = new WeightedRoundRobin();
                 wrr.setWeight(weight);
                 return wrr;
             });
-
+            //不相同则设置
             if (weight != weightedRoundRobin.getWeight()) {
-                //weight changed
+                //weight changed 权重变了
                 weightedRoundRobin.setWeight(weight);
             }
+            //权重增加
             long cur = weightedRoundRobin.increaseCurrent();
             weightedRoundRobin.setLastUpdate(now);
             if (cur > maxCurrent) {
@@ -120,11 +125,12 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         if (invokers.size() != map.size()) {
             map.entrySet().removeIf(item -> now - item.getValue().getLastUpdate() > RECYCLE_PERIOD);
         }
+        //被选择的Invoker，current-total
         if (selectedInvoker != null) {
             selectedWRR.sel(totalWeight);
             return selectedInvoker;
         }
-        // should not happen here
+        // should not happen here 不会到达这里
         return invokers.get(0);
     }
 

@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * URL statistics. (API, Cached, ThreadSafe)
- *
+ * URL统计信息
  * @see org.apache.dubbo.rpc.filter.ActiveLimitFilter
  * @see org.apache.dubbo.rpc.filter.ExecuteLimitFilter
  * @see org.apache.dubbo.rpc.cluster.loadbalance.LeastActiveLoadBalance
