@@ -75,6 +75,14 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
         failbackTasks = failbackTasksConfig;
     }
 
+    /**
+     * 添加失败定时任务
+     * @param loadbalance
+     * @param invocation
+     * @param invokers
+     * @param lastInvoker
+     * @param consumerUrl
+     */
     private void addFailed(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, Invoker<T> lastInvoker, URL consumerUrl) {
         if (failTimer == null) {
             synchronized (this) {
@@ -101,8 +109,8 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
         try {
             checkInvokers(invokers, invocation);
             invoker = select(loadbalance, invocation, invokers, null);
-            // Asynchronous call method must be used here, because failback will retry in the background.
-            // Then the serviceContext will be cleared after the call is completed.
+            // Asynchronous call method must be used here, because failback will retry in the background. 此处必须使用异步调用方法，因为回调将在后台重试。
+            // Then the serviceContext will be cleared after the call is completed. 调用完成后，serviceContext将被清除
             return invokeWithContextAsync(invoker, invocation, consumerUrl);
         } catch (Throwable e) {
             logger.error("Failback to invoke method " + invocation.getMethodName() + ", wait for retry in background. Ignored exception: "
@@ -124,6 +132,7 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     /**
      * RetryTimerTask
+     * 重试定时任务
      */
     private class RetryTimerTask implements TimerTask {
         private final Invocation invocation;
@@ -162,6 +171,10 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
         }
 
+        /**
+         * 失败重试
+         * @param timeout
+         */
         private void rePut(Timeout timeout) {
             if (timeout == null) {
                 return;

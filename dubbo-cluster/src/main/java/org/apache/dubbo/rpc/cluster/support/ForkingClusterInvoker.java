@@ -67,6 +67,7 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
             final List<Invoker<T>> selected;
             final int forks = getUrl().getParameter(FORKS_KEY, DEFAULT_FORKS);
             final int timeout = getUrl().getParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+            //"forks"并行度
             if (forks <= 0 || forks >= invokers.size()) {
                 selected = invokers;
             } else {
@@ -74,7 +75,7 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 while (selected.size() < forks) {
                     Invoker<T> invoker = select(loadbalance, invocation, invokers, selected);
                     if (!selected.contains(invoker)) {
-                        //Avoid add the same invoker several times.
+                        //Avoid add the same invoker several times. 避免多次添加相同的调用程序
                         selected.add(invoker);
                     }
                 }
@@ -82,6 +83,7 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
             RpcContext.getServiceContext().setInvokers((List) selected);
             final AtomicInteger count = new AtomicInteger();
             final BlockingQueue<Object> ref = new LinkedBlockingQueue<>();
+            //线程池调用
             for (final Invoker<T> invoker : selected) {
                 URL consumerUrl = RpcContext.getServiceContext().getConsumerUrl();
                 executor.execute(() -> {
@@ -110,7 +112,7 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
                     "but no luck to perform the invocation. Last error is: " + e.getMessage(), e);
             }
         } finally {
-            // clear attachments which is binding to current thread.
+            // clear attachments which is binding to current thread. 清除绑定到当前线程的附件
             RpcContext.getClientAttachment().clearAttachments();
         }
     }

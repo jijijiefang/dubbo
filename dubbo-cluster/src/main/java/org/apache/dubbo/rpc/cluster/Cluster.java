@@ -26,6 +26,7 @@ import org.apache.dubbo.rpc.model.ScopeModelUtil;
 
 /**
  * Cluster. (SPI, Singleton, ThreadSafe)
+ * 集群，（SPI,单例，线程安全）
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Computer_cluster">Cluster</a>
  * <a href="http://en.wikipedia.org/wiki/Fault-tolerant_system">Fault-Tolerant</a>
@@ -33,7 +34,7 @@ import org.apache.dubbo.rpc.model.ScopeModelUtil;
  */
 @SPI(Cluster.DEFAULT)
 public interface Cluster {
-
+    //默认时限
     String DEFAULT = "failover";
 
     /**

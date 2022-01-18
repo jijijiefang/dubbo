@@ -62,6 +62,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 
 /**
  * Abstract implementation of Directory: Invoker list returned from this Directory's list method have been filtered by Routers
+ * 目录的抽象实现：从该目录的列表方法返回的调用程序列表已被路由器过滤
  */
 public abstract class AbstractDirectory<T> implements Directory<T> {
 
