@@ -28,6 +28,7 @@ import java.util.List;
 
 /**
  * AdaptiveExtensionInjector
+ * 自适应扩展注入器
  */
 @Adaptive
 public class AdaptiveExtensionInjector implements ExtensionInjector, Lifecycle {

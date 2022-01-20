@@ -26,10 +26,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * ExtensionDirector is a scoped extension loader manager.
- *
+ * ExtensionDirector是一个作用域扩展加载程序管理器。
  * <p></p>
- * <p>ExtensionDirector supports multiple levels, and the child can inherit the parent's extension instances. </p>
- * <p>The way to find and create an extension instance is similar to Java classloader.</p>
+ * <p>ExtensionDirector supports multiple levels, and the child can inherit the parent's extension instances. </p> ExtensionDirector支持多个级别，子级可以继承父级的扩展实例。
+ * <p>The way to find and create an extension instance is similar to Java classloader.</p> 查找和创建扩展实例的方法类似于Java类加载器
  */
 public class ExtensionDirector implements ExtensionAccessor {
 
@@ -62,6 +62,12 @@ public class ExtensionDirector implements ExtensionAccessor {
         return this;
     }
 
+    /**
+     * 获取或新建扩展类加载器
+     * @param type
+     * @param <T>
+     * @return
+     */
     @Override
     public <T> ExtensionLoader<T> getExtensionLoader(Class<T> type) {
         checkDestroyed();
@@ -76,7 +82,7 @@ public class ExtensionDirector implements ExtensionAccessor {
                 ") is not an extension, because it is NOT annotated with @" + SPI.class.getSimpleName() + "!");
         }
 
-        // 1. find in local cache
+        // 1. find in local cache 从本地缓存查找
         ExtensionLoader<T> loader = (ExtensionLoader<T>) extensionLoadersMap.get(type);
 
         ExtensionScope scope = extensionScopeMap.get(type);
@@ -85,20 +91,20 @@ public class ExtensionDirector implements ExtensionAccessor {
             scope = annotation.scope();
             extensionScopeMap.put(type, scope);
         }
-
+        //获取不到且是自身作用域
         if (loader == null && scope == ExtensionScope.SELF) {
-            // create an instance in self scope
+            // create an instance in self scope 在自身作用域创建
             loader = createExtensionLoader0(type);
         }
 
-        // 2. find in parent
+        // 2. find in parent 从父作用域查找
         if (loader == null) {
             if (this.parent != null) {
                 loader = this.parent.getExtensionLoader(type);
             }
         }
 
-        // 3. create it
+        // 3. create it 创建
         if (loader == null) {
             loader = createExtensionLoader(type);
         }
@@ -109,14 +115,20 @@ public class ExtensionDirector implements ExtensionAccessor {
     private <T> ExtensionLoader<T> createExtensionLoader(Class<T> type) {
         ExtensionLoader<T> loader = null;
         if (isScopeMatched(type)) {
-            // if scope is matched, just create it
+            // if scope is matched, just create it 如果作用域匹配，创建
             loader = createExtensionLoader0(type);
         } else {
-            // if scope is not matched, ignore it
+            // if scope is not matched, ignore it 如果作用域不匹配，忽略
         }
         return loader;
     }
 
+    /**
+     * 创建此类型的扩展加载器
+     * @param type
+     * @param <T>
+     * @return
+     */
     private <T> ExtensionLoader<T> createExtensionLoader0(Class<T> type) {
         checkDestroyed();
         ExtensionLoader<T> loader;
