@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 /**
  * Model of dubbo framework, it can be shared with multiple applications.
+ * dubbo框架模型，可与多个应用程序共享
  */
 public class FrameworkModel extends ScopeModel {
 

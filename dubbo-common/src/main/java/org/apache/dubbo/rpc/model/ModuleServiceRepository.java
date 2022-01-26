@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 
 /**
  * Service repository for module
+ * 模块的服务存储库
  */
 public class ModuleServiceRepository {
 
@@ -39,16 +40,19 @@ public class ModuleServiceRepository {
 
     /**
      * services
+     * 服务
      */
     private ConcurrentMap<String, List<ServiceDescriptor>> services = new ConcurrentHashMap<>();
 
     /**
      * consumers ( key - group/interface:version value - consumerModel list)
+     * 消费者
      */
     private ConcurrentMap<String, List<ConsumerModel>> consumers = new ConcurrentHashMap<>();
 
     /**
      * providers
+     * 提供者
      */
     private final ConcurrentMap<String, ProviderModel> providers = new ConcurrentHashMap<>();
     private final FrameworkServiceRepository frameworkServiceRepository;

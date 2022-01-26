@@ -38,16 +38,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * {@link ExtensionLoader}, {@code DubboBootstrap} and this class are at present designed to be
- * singleton or static (by itself totally static or uses some static fields). So the instances
+ * {@link ExtensionLoader}, {@code DubboBootstrap} and this class are at present designed to be ExtensionLoader、DubboBootstrap和这个类目前被设计为单例或静态（本身完全静态或使用一些静态字段）
+ * singleton or static (by itself totally static or uses some static fields). So the instances  因此，从它们返回的实例属于流程范围。如果您想在一个进程中支持多个dubbo服务器，您可能需要重构这三个类
  * returned from them are of process scope. If you want to support multiple dubbo servers in one
  * single process, you may need to refactor those three classes.
  * <p>
  * Represent a application which is using Dubbo and store basic metadata info for using
  * during the processing of RPC invoking.
+ * 表示正在使用Dubbo的应用程序，并存储基本元数据信息，以便在RPC调用过程中使用
  * <p>
  * ApplicationModel includes many ProviderModel which is about published services
  * and many Consumer Model which is about subscribed services.
+ * ApplicationModel包括许多关于发布服务的ProviderModel和许多关于订阅服务的Consumer Model
  * <p>
  */
 
