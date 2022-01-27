@@ -73,7 +73,7 @@ public class Exchangers {
             throw new IllegalArgumentException("handler == null");
         }
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
-        //HeaderExchanger#bind
+        //HeaderExchanger#bind,DubboProtocol$ExchangeHandler
         return getExchanger(url).bind(url, handler);
     }
 
@@ -105,6 +105,13 @@ public class Exchangers {
         return connect(URL.valueOf(url), handler);
     }
 
+    /**
+     * 连接到Netty服务端
+     * @param url
+     * @param handler
+     * @return
+     * @throws RemotingException
+     */
     public static ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
         if (url == null) {
             throw new IllegalArgumentException("url == null");

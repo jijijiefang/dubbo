@@ -41,7 +41,7 @@ public class HeaderExchanger implements Exchanger {
 
     @Override
     public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
-        //Transporters#bind
+        //Transporters#bind DecodeHandler包装HeaderExchangeHandler，HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
         return new HeaderExchangeServer(Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
     }
 

@@ -67,6 +67,13 @@ public class Transporters {
         return connect(URL.valueOf(url), handler);
     }
 
+    /**
+     * 连接到Netty服务端
+     * @param url
+     * @param handlers
+     * @return
+     * @throws RemotingException
+     */
     public static Client connect(URL url, ChannelHandler... handlers) throws RemotingException {
         if (url == null) {
             throw new IllegalArgumentException("url == null");

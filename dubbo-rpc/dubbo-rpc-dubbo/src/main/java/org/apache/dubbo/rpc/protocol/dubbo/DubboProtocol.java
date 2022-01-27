@@ -108,6 +108,9 @@ public class DubboProtocol extends AbstractProtocol {
 
     private AtomicBoolean destroyed = new AtomicBoolean();
 
+    /**
+     * 服务调用执行实际的服务方法
+     */
     private ExchangeHandler requestHandler = new ExchangeHandlerAdapter() {
 
         @Override
@@ -150,6 +153,7 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
             RpcContext.getServiceContext().setRemoteAddress(channel.getRemoteAddress());
+            //服务调用
             Result result = invoker.invoke(inv);
             return result.thenApply(Function.identity());
         }
@@ -312,6 +316,7 @@ public class DubboProtocol extends AbstractProtocol {
         }
         //初始化并开启Netty服务端或重置
         openServer(url);
+        //优化序列化
         optimizeSerialization(url);
 
         return exporter;
@@ -372,6 +377,7 @@ public class DubboProtocol extends AbstractProtocol {
 
         ExchangeServer server;
         try {
+            //DubboProtocol$ExchangeHandler
             server = Exchangers.bind(url, requestHandler);
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);
@@ -436,26 +442,32 @@ public class DubboProtocol extends AbstractProtocol {
         checkDestroyed();
         optimizeSerialization(url);
 
-        // create rpc invoker.
+        // create rpc invoker.创建RPC Invoker                  根据URL获取Netty NIO客户端
         DubboInvoker<T> invoker = new DubboInvoker<T>(serviceType, url, getClients(url), invokers);
         invokers.add(invoker);
 
         return invoker;
     }
 
+    /**
+     * 根据URL获取或创建NIO客户端
+     * @param url
+     * @return
+     */
     private ExchangeClient[] getClients(URL url) {
-        // whether to share connection
+        // whether to share connection 是否共享连接
 
         boolean useShareConnect = false;
 
         int connections = url.getParameter(CONNECTIONS_KEY, 0);
         List<ReferenceCountExchangeClient> shareClients = null;
-        // if not configured, connection is shared, otherwise, one connection for one service
+        // if not configured, connection is shared, otherwise, one connection for one service 如果没有配置共享连接，一个连接对应一个服务
         if (connections == 0) {
             useShareConnect = true;
 
             /*
              * The xml configuration should have a higher priority than properties.
+             * xml配置优先级高于属性
              */
             String shareConnectionsStr = url.getParameter(SHARE_CONNECTIONS_KEY, (String) null);
             connections = Integer.parseInt(StringUtils.isBlank(shareConnectionsStr) ? ConfigurationUtils.getProperty(url.getOrDefaultApplicationModel(), SHARE_CONNECTIONS_KEY,
@@ -469,6 +481,7 @@ public class DubboProtocol extends AbstractProtocol {
                 clients[i] = shareClients.get(i);
 
             } else {
+                //初始化客户端
                 clients[i] = initClient(url);
             }
         }
@@ -626,7 +639,7 @@ public class DubboProtocol extends AbstractProtocol {
 
     /**
      * Create new connection
-     *
+     * 创建新的连接
      * @param url
      */
     private ExchangeClient initClient(URL url) {
@@ -637,7 +650,7 @@ public class DubboProtocol extends AbstractProtocol {
          */
         String str = url.getParameter(CLIENT_KEY, url.getParameter(SERVER_KEY, DEFAULT_REMOTING_CLIENT));
 
-        // BIO is not allowed since it has severe performance issue.
+        // BIO is not allowed since it has severe performance issue. BIO是不允许的，因为它有严重的性能问题
         if (StringUtils.isNotEmpty(str) && !url.getOrDefaultFrameworkModel().getExtensionLoader(Transporter.class).hasExtension(str)) {
             throw new RpcException("Unsupported client type: " + str + "," +
                     " supported client type is " + StringUtils.join(url.getOrDefaultFrameworkModel().getExtensionLoader(Transporter.class).getSupportedExtensions(), " "));
@@ -645,16 +658,17 @@ public class DubboProtocol extends AbstractProtocol {
 
         ExchangeClient client;
         try {
-            // Replace InstanceAddressURL with ServiceConfigURL.
+            // Replace InstanceAddressURL with ServiceConfigURL. 将InstanceAddressURL替换为ServiceConfigurl
             url = new ServiceConfigURL(DubboCodec.NAME, url.getUsername(), url.getPassword(), url.getHost(), url.getPort(), url.getPath(),  url.getAllParameters());
             url = url.addParameter(CODEC_KEY, DubboCodec.NAME);
-            // enable heartbeat by default
+            // enable heartbeat by default 默认启动心跳
             url = url.addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT));
 
-            // connection should be lazy
+            // connection should be lazy 是否延迟连接
             if (url.getParameter(LAZY_CONNECT_KEY, false)) {
                 client = new LazyConnectExchangeClient(url, requestHandler);
             } else {
+                //连接服务端
                 client = Exchangers.connect(url, requestHandler);
             }
 

@@ -40,6 +40,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     private static final Logger logger = LoggerFactory.getLogger(NettyServerHandler.class);
     /**
      * the cache for alive worker channel.
+     * 活动工作通道的缓存
      * <ip:port, dubbo channel>
      */
     private final Map<String, Channel> channels = new ConcurrentHashMap<String, Channel>();
@@ -56,6 +57,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
             throw new IllegalArgumentException("handler == null");
         }
         this.url = url;
+        //handler指的是NettyServer，调用时会调到AbstractPeer
         this.handler = handler;
     }
 

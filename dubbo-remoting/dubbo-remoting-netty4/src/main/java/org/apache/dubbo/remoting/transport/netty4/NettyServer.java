@@ -102,7 +102,6 @@ public class NettyServer extends AbstractServer {
         workerGroup = NettyEventLoopFactory.eventLoopGroup(
                 getUrl().getPositiveParameter(IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),
             EVENT_LOOP_WORKER_POOL_NAME);
-
         final NettyServerHandler nettyServerHandler = new NettyServerHandler(getUrl(), this);
         channels = nettyServerHandler.getChannels();
 

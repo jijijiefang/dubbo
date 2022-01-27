@@ -174,6 +174,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                 if (request.isTwoWay()) {
                     handleRequest(exchangeChannel, request);
                 } else {
+                    //DubboProtocol$ExchangeHandler
                     handler.received(exchangeChannel, request.getData());
                 }
             }

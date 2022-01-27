@@ -45,6 +45,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
             throw new IllegalArgumentException("handler == null");
         }
         this.url = url;
+        //DecodeHandler包装HeaderExchangeHandler，HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
         this.handler = handler;
     }
 
@@ -144,6 +145,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         if (closed) {
             return;
         }
+        //DecodeHandler包装HeaderExchangeHandler，HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
         handler.received(ch, msg);
     }
 

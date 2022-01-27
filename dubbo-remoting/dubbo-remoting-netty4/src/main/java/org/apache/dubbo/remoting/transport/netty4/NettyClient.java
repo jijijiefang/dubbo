@@ -91,7 +91,7 @@ public class NettyClient extends AbstractClient {
 
     /**
      * Init bootstrap
-     *
+     * 初始化
      * @throws Throwable
      */
     @Override

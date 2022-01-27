@@ -39,12 +39,20 @@ public class NettyTransporter implements Transporter {
      */
     @Override
     public RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException {
-        //
+        //DecodeHandler包装HeaderExchangeHandler，HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
         return new NettyServer(url, handler);
     }
 
+    /**
+     * 构造Netty客户端
+     * @param url server url
+     * @param handler
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public Client connect(URL url, ChannelHandler handler) throws RemotingException {
+        //DecodeHandler包装HeaderExchangeHandler，HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
         return new NettyClient(url, handler);
     }
 
