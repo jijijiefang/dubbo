@@ -102,6 +102,7 @@ public class NettyServer extends AbstractServer {
         workerGroup = NettyEventLoopFactory.eventLoopGroup(
                 getUrl().getPositiveParameter(IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),
             EVENT_LOOP_WORKER_POOL_NAME);
+        //执行入口ChannelHandler
         final NettyServerHandler nettyServerHandler = new NettyServerHandler(getUrl(), this);
         channels = nettyServerHandler.getChannels();
 
@@ -123,9 +124,9 @@ public class NettyServer extends AbstractServer {
                             ch.pipeline().addLast("negotiation", new SslServerTlsHandler(getUrl()));
                         }
                         ch.pipeline()
-                                .addLast("decoder", adapter.getDecoder())
-                                .addLast("encoder", adapter.getEncoder())
-                                .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))
+                                .addLast("decoder", adapter.getDecoder())//内部解码器
+                                .addLast("encoder", adapter.getEncoder())//内部编码器
+                                .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))//心跳检查
                                 .addLast("handler", nettyServerHandler);
                     }
                 });

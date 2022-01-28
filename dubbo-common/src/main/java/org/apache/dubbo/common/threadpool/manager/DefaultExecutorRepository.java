@@ -121,7 +121,7 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
 
     /**
      * Get called when the server or client instance initiating.
-     *
+     * 在服务器或客户端实例启动时被调用
      * @param url
      * @return
      */
@@ -134,7 +134,7 @@ public class DefaultExecutorRepository implements ExecutorRepository, ExtensionA
         }
         URL finalUrl = url;
         ExecutorService executor = executors.computeIfAbsent(portKey, k -> createExecutor(finalUrl));
-        // If executor has been shut down, create a new one
+        // If executor has been shut down, create a new one 如果线程池已关闭，创建一个新的
         if (executor.isShutdown() || executor.isTerminated()) {
             executors.remove(portKey);
             executor = createExecutor(url);

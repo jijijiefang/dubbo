@@ -52,6 +52,7 @@ public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
                 }
             }
         } else {
+            //HeartbeatHandler#received
             handler.received(channel, message);
         }
     }

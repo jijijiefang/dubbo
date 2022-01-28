@@ -41,7 +41,15 @@ public class ChannelHandlers {
         INSTANCE = instance;
     }
 
+    /**
+     * 包装内部Handler
+     * @param handler
+     * @param url
+     * @return
+     */
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
+        //MultiMessageHandler包装HeartbeatHandler，HeartbeatHandler包装AllChannelHandler（默认策略），AllChannelHandler包装DecodeHandler
+        //DecodeHandler包装HeaderExchangeHandler，HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
         return new MultiMessageHandler(new HeartbeatHandler(url.getOrDefaultFrameworkModel().getExtensionLoader(Dispatcher.class)
                 .getAdaptiveExtension().dispatch(handler, url)));
     }

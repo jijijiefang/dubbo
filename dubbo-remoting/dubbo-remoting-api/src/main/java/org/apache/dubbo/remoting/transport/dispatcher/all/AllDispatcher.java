@@ -29,6 +29,7 @@ public class AllDispatcher implements Dispatcher {
 
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
+        //handler = DecodeHandler包装HeaderExchangeHandler，HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
         return new AllChannelHandler(handler, url);
     }
 

@@ -21,6 +21,9 @@ import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.ChannelHandler;
 
+/**
+ * 通道事件线程
+ */
 public class ChannelEventRunnable implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(ChannelEventRunnable.class);
 
@@ -52,8 +55,10 @@ public class ChannelEventRunnable implements Runnable {
 
     @Override
     public void run() {
+        //接收请求事件
         if (state == ChannelState.RECEIVED) {
             try {
+                //handler = DecodeHandler包装HeaderExchangeHandler，HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
                 handler.received(channel, message);
             } catch (Exception e) {
                 logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel
@@ -61,6 +66,7 @@ public class ChannelEventRunnable implements Runnable {
             }
         } else {
             switch (state) {
+            //连接事件
             case CONNECTED:
                 try {
                     handler.connected(channel);
@@ -68,6 +74,7 @@ public class ChannelEventRunnable implements Runnable {
                     logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel, e);
                 }
                 break;
+            //断开连接事件
             case DISCONNECTED:
                 try {
                     handler.disconnected(channel);
@@ -75,6 +82,7 @@ public class ChannelEventRunnable implements Runnable {
                     logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel, e);
                 }
                 break;
+            //发送响应事件
             case SENT:
                 try {
                     handler.sent(channel, message);
@@ -83,6 +91,7 @@ public class ChannelEventRunnable implements Runnable {
                             + ", message is " + message, e);
                 }
                 break;
+            //处理异常事件
             case CAUGHT:
                 try {
                     handler.caught(channel, exception);

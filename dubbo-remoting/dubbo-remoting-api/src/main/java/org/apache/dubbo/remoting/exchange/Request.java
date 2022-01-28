@@ -24,6 +24,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 
 /**
  * Request.
+ * 请求
  */
 public class Request {
 

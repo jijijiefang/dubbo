@@ -47,7 +47,7 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
         if (message instanceof Response) {
             decode(((Response) message).getResult());
         }
-        //HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
+        //handler = HeaderExchangeHandler包装DubboProtocol$ExchangeHandler
         handler.received(channel, message);
     }
 
