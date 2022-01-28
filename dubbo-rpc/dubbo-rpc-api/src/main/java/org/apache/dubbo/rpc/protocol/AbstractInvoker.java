@@ -88,6 +88,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
 
     /**
      * Whether set future to Thread Local when invocation mode is sync
+     * 调用模式为sync时是否将future设置为Thread Local
      */
     private static final boolean setFutureWhenSync = Boolean.parseBoolean(System.getProperty(CommonConstants.SET_FUTURE_IN_SYNC_MODE, "true"));
 
@@ -215,14 +216,20 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         }
     }
 
+    /**
+     * 进行RPC调用并返回响应
+     * @param invocation
+     * @return
+     */
     private AsyncRpcResult doInvokeAndReturn(RpcInvocation invocation) {
         AsyncRpcResult asyncResult;
         try {
+            //发起RPC调用
             asyncResult = (AsyncRpcResult) doInvoke(invocation);
         } catch (InvocationTargetException e) {
             Throwable te = e.getTargetException();
             if (te != null) {
-                // if biz exception
+                // if biz exception 业务异常
                 if (te instanceof RpcException) {
                     ((RpcException) te).setCode(RpcException.BIZ_EXCEPTION);
                 }
@@ -231,7 +238,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
                 asyncResult = AsyncRpcResult.newDefaultAsyncResult(null, e, invocation);
             }
         } catch (RpcException e) {
-            // if biz exception
+            // if biz exception 业务异常
             if (e.isBiz()) {
                 asyncResult = AsyncRpcResult.newDefaultAsyncResult(null, e, invocation);
             } else {
@@ -240,15 +247,20 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         } catch (Throwable e) {
             asyncResult = AsyncRpcResult.newDefaultAsyncResult(null, e, invocation);
         }
-
+        //是否同步设置为future或异步模式
         if (setFutureWhenSync || invocation.getInvokeMode() != InvokeMode.SYNC) {
-            // set server context
+            // set server context 设置服务上下文
             RpcContext.getServiceContext().setFuture(new FutureAdapter<>(asyncResult.getResponseFuture()));
         }
 
         return asyncResult;
     }
 
+    /**
+     * 如果是同步请求等待响应结果
+     * @param asyncResult
+     * @param invocation
+     */
     private void waitForResultIfSync(AsyncRpcResult asyncResult, RpcInvocation invocation) {
         if (InvokeMode.SYNC != invocation.getInvokeMode()) {
             return;
@@ -256,9 +268,10 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         try {
             /*
              * NOTICE!
-             * must call {@link java.util.concurrent.CompletableFuture#get(long, TimeUnit)} because
+             * must call {@link java.util.concurrent.CompletableFuture#get(long, TimeUnit)} because 必须使用带超时的get，普通get有性能问题
              * {@link java.util.concurrent.CompletableFuture#get()} was proved to have serious performance drop.
              */
+            //超时时间
             Object timeout = invocation.getObjectAttachment(TIMEOUT_KEY);
             if (timeout instanceof Integer) {
                 asyncResult.get((Integer) timeout, TimeUnit.MILLISECONDS);

@@ -145,6 +145,12 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         }
     }
 
+    /**
+     * 发送请求到Netty服务端
+     * @param channel channel.
+     * @param message message.
+     * @throws RemotingException
+     */
     @Override
     public void sent(Channel channel, Object message) throws RemotingException {
         Throwable exception = null;
@@ -157,6 +163,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         }
         if (message instanceof Request) {
             Request request = (Request) message;
+            //设置请求发送时间
             DefaultFuture.sent(channel, request);
         }
         if (exception != null) {

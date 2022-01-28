@@ -34,6 +34,7 @@ public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
         super(handler);
     }
 
+
     @SuppressWarnings("unchecked")
     @Override
     public void received(Channel channel, Object message) throws RemotingException {

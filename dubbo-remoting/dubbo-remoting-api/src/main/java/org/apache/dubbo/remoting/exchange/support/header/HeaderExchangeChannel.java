@@ -120,18 +120,28 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         return request(request, channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT), executor);
     }
 
+    /**
+     * 请求响应模式发送请求
+     * @param request
+     * @param timeout
+     * @param executor
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public CompletableFuture<Object> request(Object request, int timeout, ExecutorService executor) throws RemotingException {
         if (closed) {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send request " + request + ", cause: The channel " + this + " is closed!");
         }
-        // create request.
+        // create request. 创建请求
         Request req = new Request();
         req.setVersion(Version.getProtocolVersion());
-        req.setTwoWay(true);
+        req.setTwoWay(true);//请求响应模式
         req.setData(request);
+        //构造请求的DefaultFuture
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
         try {
+            //AbstractPeer#send
             channel.send(req);
         } catch (RemotingException e) {
             future.cancel();

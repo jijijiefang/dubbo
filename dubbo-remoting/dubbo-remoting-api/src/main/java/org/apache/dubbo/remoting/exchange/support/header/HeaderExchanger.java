@@ -34,6 +34,13 @@ public class HeaderExchanger implements Exchanger {
 
     public static final String NAME = "header";
 
+    /**
+     * Netty客户端连接到服务端
+     * @param url
+     * @param handler
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
         return new HeaderExchangeClient(Transporters.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler))), true);

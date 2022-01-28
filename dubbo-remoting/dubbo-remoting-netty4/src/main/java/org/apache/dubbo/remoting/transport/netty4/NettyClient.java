@@ -91,11 +91,12 @@ public class NettyClient extends AbstractClient {
 
     /**
      * Init bootstrap
-     * 初始化
+     * 初始化Netty客户端
      * @throws Throwable
      */
     @Override
     protected void doOpen() throws Throwable {
+        //
         final NettyClientHandler nettyClientHandler = new NettyClientHandler(getUrl(), this);
         bootstrap = new Bootstrap();
         bootstrap.group(EVENT_LOOP_GROUP.get())
@@ -141,19 +142,25 @@ public class NettyClient extends AbstractClient {
         return false;
     }
 
+    /**
+     * 连接Netty服务端
+     * @throws Throwable
+     */
     @Override
     protected void doConnect() throws Throwable {
         long start = System.currentTimeMillis();
+        //连接服务端
         ChannelFuture future = bootstrap.connect(getConnectAddress());
         try {
             boolean ret = future.awaitUninterruptibly(getConnectTimeout(), MILLISECONDS);
-
+            //连接成功
             if (ret && future.isSuccess()) {
                 Channel newChannel = future.channel();
                 try {
                     // Close old channel
                     // copy reference
                     Channel oldChannel = NettyClient.this.channel;
+                    //关闭旧连接
                     if (oldChannel != null) {
                         try {
                             if (logger.isInfoEnabled()) {

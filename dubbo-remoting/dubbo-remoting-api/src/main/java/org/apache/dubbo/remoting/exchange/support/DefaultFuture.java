@@ -76,6 +76,12 @@ public class DefaultFuture extends CompletableFuture<Object> {
         this.executor = executor;
     }
 
+    /**
+     * 构造并将request与DefaultFuture映射关系放入容器
+     * @param channel
+     * @param request
+     * @param timeout
+     */
     private DefaultFuture(Channel channel, Request request, int timeout) {
         this.channel = channel;
         this.request = request;
@@ -104,7 +110,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
      * init a DefaultFuture
      * 1.init a DefaultFuture
      * 2.timeout check
-     *
+     * 初始化默认Future并进行超时检查
      * @param channel channel
      * @param request the request
      * @param timeout timeout
@@ -117,7 +123,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
         if (executor instanceof ThreadlessExecutor) {
             ((ThreadlessExecutor) executor).setWaitingFuture(future);
         }
-        // timeout check
+        // timeout check 超时检查
         timeoutCheck(future);
         return future;
     }
@@ -202,6 +208,10 @@ public class DefaultFuture extends CompletableFuture<Object> {
         this.cancel(true);
     }
 
+    /**
+     * 根据状态设置响应结果
+     * @param res
+     */
     private void doReceived(Response res) {
         if (res == null) {
             throw new IllegalStateException("response cannot be null");

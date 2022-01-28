@@ -34,6 +34,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 
 /**
  * NettyClientHandler
+ * Netty客户端ChannelHandler
  */
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyClientHandler extends ChannelDuplexHandler {
@@ -77,12 +78,25 @@ public class NettyClientHandler extends ChannelDuplexHandler {
         }
     }
 
+    /**
+     * 处理服务端响应
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
         handler.received(channel, msg);
     }
 
+    /**
+     * 发送请求，写入通道
+     * @param ctx
+     * @param msg
+     * @param promise
+     * @throws Exception
+     */
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         super.write(ctx, msg, promise);
@@ -94,11 +108,11 @@ public class NettyClientHandler extends ChannelDuplexHandler {
         // we need to have the request return directly instead of blocking the invoke process.
         promise.addListener(future -> {
             if (future.isSuccess()) {
-                // if our future is success, mark the future to sent.
+                // if our future is success, mark the future to sent.写入成功
                 handler.sent(channel, msg);
                 return;
             }
-
+            //异常处理
             Throwable t = future.cause();
             if (t != null && isRequest) {
                 Request request = (Request) msg;

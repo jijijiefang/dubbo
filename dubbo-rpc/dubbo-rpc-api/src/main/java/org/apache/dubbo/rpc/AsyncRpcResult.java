@@ -172,7 +172,7 @@ public class AsyncRpcResult implements Result {
      * This method will always return after a maximum 'timeout' waiting:
      * 1. if value returns before timeout, return normally.
      * 2. if no value returns after timeout, throw TimeoutException.
-     *
+     * 此方法将始终在最大“超时”等待后返回：1。如果值在超时之前返回，则正常返回。2.如果超时后没有返回值，则抛出TimeoutException
      * @return
      * @throws InterruptedException
      * @throws ExecutionException
@@ -186,6 +186,15 @@ public class AsyncRpcResult implements Result {
         return responseFuture.get();
     }
 
+    /**
+     * 超时返回
+     * @param timeout
+     * @param unit
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     * @throws TimeoutException
+     */
     @Override
     public Result get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         if (executor != null && executor instanceof ThreadlessExecutor) {

@@ -84,6 +84,12 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         this.serverShutdownTimeout = ConfigurationUtils.getServerShutdownTimeout(getUrl().getScopeModel());
     }
 
+    /**
+     * 发起RPC调用
+     * @param invocation
+     * @return
+     * @throws Throwable
+     */
     @Override
         protected Result doInvoke(final Invocation invocation) throws Throwable {
         RpcInvocation inv = (RpcInvocation) invocation;
