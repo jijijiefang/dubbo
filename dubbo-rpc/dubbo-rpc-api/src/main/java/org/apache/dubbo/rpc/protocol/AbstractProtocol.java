@@ -49,6 +49,7 @@ public abstract class AbstractProtocol implements Protocol, ScopeModelAware {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    //已导出的接口
     protected final Map<String, Exporter<?>> exporterMap = new ConcurrentHashMap<>();
 
     /**

@@ -46,7 +46,7 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 /**
  * RPC Invocation.
- *
+ * RPC调用
  * @serial Don't change the class name and properties.
  */
 public class RpcInvocation implements Invocation, Serializable {
@@ -57,24 +57,26 @@ public class RpcInvocation implements Invocation, Serializable {
     private String protocolServiceKey;
 
     private ServiceModel serviceModel;
-
+    //方法名称
     private String methodName;
-
+    //接口名称
     private String serviceName;
 
     private transient Class<?>[] parameterTypes;
     private String parameterTypesDesc;
     private String[] compatibleParamSignatures;
-
+    //方法参数
     private Object[] arguments;
 
     /**
      * Passed to the remote server during RPC call
+     * 在RPC调用期间传递给远程服务器
      */
     private Map<String, Object> attachments;
 
     /**
      * Only used on the caller side, will not appear on the wire.
+     * 仅在呼叫端使用，不会出现在线路上
      */
     private transient Map<Object, Object> attributes = new HashMap<Object, Object>();
 

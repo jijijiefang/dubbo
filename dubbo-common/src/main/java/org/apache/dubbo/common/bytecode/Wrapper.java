@@ -40,9 +40,10 @@ import java.util.stream.Collectors;
 
 /**
  * Wrapper.
+ * 包装类
  */
 public abstract class Wrapper {
-    private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>(); //class wrapper map
+    private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>(); //class wrapper map 类包装映射
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String[] OBJECT_METHODS = new String[]{"getClass", "hashCode", "toString", "equals"};
     private static final Wrapper OBJECT_WRAPPER = new Wrapper() {
@@ -105,7 +106,7 @@ public abstract class Wrapper {
 
     /**
      * get wrapper.
-     *
+     * 获取包装的调用类反射的对象
      * @param c Class instance.
      * @return Wrapper instance(not null).
      */
@@ -122,6 +123,11 @@ public abstract class Wrapper {
         return WRAPPER_MAP.computeIfAbsent(c, Wrapper::makeWrapper);
     }
 
+    /**
+     *
+     * @param c
+     * @return
+     */
     private static Wrapper makeWrapper(Class<?> c) {
         if (c.isPrimitive()) {
             throw new IllegalArgumentException("Can not create wrapper for primitive type: " + c);
@@ -143,7 +149,7 @@ public abstract class Wrapper {
         List<String> mns = new ArrayList<>(); // method names.
         List<String> dmns = new ArrayList<>(); // declaring method names.
 
-        // get all public field.
+        // get all public field. 获取所有公开属性
         for (Field f : c.getFields()) {
             String fn = f.getName();
             Class<?> ft = f.getType();
@@ -174,7 +180,7 @@ public abstract class Wrapper {
                                  .filter(method -> allMethod.contains(ReflectUtils.getDesc(method)))
                                  .collect(Collectors.toList())
                                  .toArray(new Method[] {});
-        // get all public method.
+        // get all public method. 获取所有公开方法
         boolean hasMethod = ClassUtils.hasMethods(methods);
         if (hasMethod) {
             Map<String, Integer> sameNameMethodCount = new HashMap<>((int) (methods.length / 0.75f) + 1);
@@ -286,6 +292,7 @@ public abstract class Wrapper {
             for (Method m : ms.values()) {
                 wc.getField("mts" + ix++).set(null, m.getParameterTypes());
             }
+            //反射出对象
             return (Wrapper) wc.getDeclaredConstructor().newInstance();
         } catch (RuntimeException e) {
             throw e;

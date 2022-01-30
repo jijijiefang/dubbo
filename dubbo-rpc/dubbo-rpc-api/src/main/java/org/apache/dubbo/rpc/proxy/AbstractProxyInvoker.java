@@ -39,6 +39,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.PROVIDER_ASYNC_K
 
 /**
  * This Invoker works on provider side, delegates RPC to interface implementation.
+ * 这个Invoker在提供者端工作，将RPC委托给接口实现
  */
 public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     Logger logger = LoggerFactory.getLogger(AbstractProxyInvoker.class);
@@ -95,7 +96,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
                     Profiler.setToBizProfiler(profiler);
                 }
             }
-
+            //动态代理生成对象或包装类反射的对象进行方法调用
             Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
 
             if (ProfilerSwitch.isEnableSimpleProfiler()) {
