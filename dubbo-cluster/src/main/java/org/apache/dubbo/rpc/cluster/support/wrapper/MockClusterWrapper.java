@@ -26,13 +26,21 @@ import org.apache.dubbo.rpc.cluster.Directory;
  *
  */
 public class MockClusterWrapper implements Cluster {
-
+    //FailoverCluster
     private final Cluster cluster;
 
     public MockClusterWrapper(Cluster cluster) {
         this.cluster = cluster;
     }
 
+    /**
+     * 返回MockClusterInvoker包装的FailoverClusterInvoker
+     * @param directory
+     * @param buildFilterChain
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Invoker<T> join(Directory<T> directory, boolean buildFilterChain) throws RpcException {
         return new MockClusterInvoker<T>(directory,

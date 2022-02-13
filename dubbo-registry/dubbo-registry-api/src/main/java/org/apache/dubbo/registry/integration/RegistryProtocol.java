@@ -503,7 +503,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
                 return doRefer(Cluster.getCluster(url.getScopeModel(), MergeableCluster.NAME), registry, type, url, qs);
             }
         }
-        //MockClusterWrapper
+        //MockClusterWrapper包装的FailOverCluster
         Cluster cluster = Cluster.getCluster(url.getScopeModel(), qs.get(CLUSTER_KEY));
         return doRefer(cluster, registry, type, url, qs);
     }
@@ -532,7 +532,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
         //zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-consumer&dubbo=2.0.2&pid=20092&timestamp=1641989296462
         //registryProtocol是InterfaceCompatibleRegistryProtocol#getMigrationInvoker
         ClusterInvoker<T> migrationInvoker =  getMigrationInvoker(this, cluster, registry, type, url, consumerUrl);
-        //监听器
+        //监听器,构建RPC调用链条Invoker，注入MockClusterInvoker、DubboInvoker
         return interceptInvoker(migrationInvoker, url, consumerUrl, url);
     }
 
@@ -607,7 +607,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
         directory.buildRouterChain(urlToRegistry);
         //订阅服务
         directory.subscribe(toSubscribeUrl(urlToRegistry));
-
+        //cluster是MockClusterWrapper时，MockClusterWrapper#join,返回MockClusterInvoker，MockClusterInvoker包装FailoverClusterInvoker
         return (ClusterInvoker<T>) cluster.join(directory, true);
     }
 
