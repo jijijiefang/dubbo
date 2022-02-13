@@ -503,7 +503,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
                 return doRefer(Cluster.getCluster(url.getScopeModel(), MergeableCluster.NAME), registry, type, url, qs);
             }
         }
-        //MockClusterWrapper包装的FailOverCluster
+        //cluster是MockClusterWrapper，包装FailOverCluster
         Cluster cluster = Cluster.getCluster(url.getScopeModel(), qs.get(CLUSTER_KEY));
         return doRefer(cluster, registry, type, url, qs);
     }
