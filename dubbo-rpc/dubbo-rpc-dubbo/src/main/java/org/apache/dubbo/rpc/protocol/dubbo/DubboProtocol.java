@@ -382,6 +382,7 @@ public class DubboProtocol extends AbstractProtocol {
                 .addParameterIfAbsent(CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString())
                 // enable heartbeat by default
                 .addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT))
+                //编解码器，使用"dubbo"
                 .addParameter(CODEC_KEY, DubboCodec.NAME)
                 .build();
         String str = url.getParameter(SERVER_KEY, DEFAULT_REMOTING_SERVER);
@@ -675,6 +676,7 @@ public class DubboProtocol extends AbstractProtocol {
         try {
             // Replace InstanceAddressURL with ServiceConfigURL. 将InstanceAddressURL替换为ServiceConfigurl
             url = new ServiceConfigURL(DubboCodec.NAME, url.getUsername(), url.getPassword(), url.getHost(), url.getPort(), url.getPath(),  url.getAllParameters());
+            //设置codec为"dubbo"
             url = url.addParameter(CODEC_KEY, DubboCodec.NAME);
             // enable heartbeat by default 默认启动心跳
             url = url.addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT));

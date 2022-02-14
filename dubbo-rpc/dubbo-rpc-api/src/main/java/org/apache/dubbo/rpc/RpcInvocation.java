@@ -52,7 +52,7 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 public class RpcInvocation implements Invocation, Serializable {
 
     private static final long serialVersionUID = -4355285085441097045L;
-
+    //目标服务名称
     private String targetServiceUniqueName;
     private String protocolServiceKey;
 

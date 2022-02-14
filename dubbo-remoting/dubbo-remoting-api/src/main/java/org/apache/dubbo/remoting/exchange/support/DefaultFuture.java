@@ -166,10 +166,21 @@ public class DefaultFuture extends CompletableFuture<Object> {
         }
     }
 
+    /**
+     * 处理响应
+     * @param channel
+     * @param response
+     */
     public static void received(Channel channel, Response response) {
         received(channel, response, false);
     }
 
+    /**
+     * 处理响应
+     * @param channel
+     * @param response
+     * @param timeout
+     */
     public static void received(Channel channel, Response response, boolean timeout) {
         try {
             DefaultFuture future = FUTURES.remove(response.getId());
@@ -224,8 +235,8 @@ public class DefaultFuture extends CompletableFuture<Object> {
             this.completeExceptionally(new RemotingException(channel, res.getErrorMessage()));
         }
 
-        // the result is returning, but the caller thread may still waiting
-        // to avoid endless waiting for whatever reason, notify caller thread to return.
+        // the result is returning, but the caller thread may still waiting 结果是返回，但调用线程可能仍在等待，
+        // to avoid endless waiting for whatever reason, notify caller thread to return. 以避免无休止的等待，无论出于何种原因，通知调用线程返回。
         if (executor != null && executor instanceof ThreadlessExecutor) {
             ThreadlessExecutor threadlessExecutor = (ThreadlessExecutor) executor;
             if (threadlessExecutor.isWaiting()) {

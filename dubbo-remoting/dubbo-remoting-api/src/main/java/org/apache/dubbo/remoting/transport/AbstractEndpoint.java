@@ -43,14 +43,20 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
 
     public AbstractEndpoint(URL url, ChannelHandler handler) {
         super(url, handler);
+        //从URL获取编码解码器,"dubbo"协议的编码解码器是DubboCountCodec
         this.codec = getChannelCodec(url);
         this.connectTimeout = url.getPositiveParameter(Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
     }
 
+    /**
+     * 从URL获取编码解码器
+     * @param url
+     * @return
+     */
     protected static Codec2 getChannelCodec(URL url) {
         String codecName = url.getParameter(Constants.CODEC_KEY);
         if (StringUtils.isEmpty(codecName)) {
-            // codec extension name must stay the same with protocol name
+            // codec extension name must stay the same with protocol name 编解码器扩展名必须与协议名保持一致
             codecName = url.getProtocol();
         }
         FrameworkModel frameworkModel = getFrameworkModel(url.getScopeModel());

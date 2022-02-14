@@ -49,6 +49,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_DECODE_IN_IO
 
 /**
  * Dubbo codec.
+ * dubbo协议的编码解码器
  */
 public class DubboCodec extends ExchangeCodec {
 
@@ -71,25 +72,36 @@ public class DubboCodec extends ExchangeCodec {
         callbackServiceCodec = new CallbackServiceCodec(frameworkModel);
     }
 
+    /**
+     * 解码消息体
+     * @param channel
+     * @param is
+     * @param header
+     * @return
+     * @throws IOException
+     */
     @Override
     protected Object decodeBody(Channel channel, InputStream is, byte[] header) throws IOException {
+        //proto是编码序列化协议的标识
         byte flag = header[2], proto = (byte) (flag & SERIALIZATION_MASK);
-        // get request id.
+        // get request id. 获取请求id
         long id = Bytes.bytes2long(header, 4);
         if ((flag & FLAG_REQUEST) == 0) {
-            // decode response.
+            // decode response. 解码响应
             Response res = new Response(id);
             if ((flag & FLAG_EVENT) != 0) {
                 res.setEvent(true);
             }
-            // get status.
+            // get status. 获取状态
             byte status = header[3];
             res.setStatus(status);
             try {
                 if (status == Response.OK) {
                     Object data;
+                    //是否是事件
                     if (res.isEvent()) {
                         byte[] eventPayload = CodecSupport.getPayload(is);
+                        //心跳
                         if (CodecSupport.isHeartBeat(eventPayload, proto)) {
                             // heart beat response data is always null;
                             data = null;
@@ -124,7 +136,7 @@ public class DubboCodec extends ExchangeCodec {
             }
             return res;
         } else {
-            // decode request.
+            // decode request. 解码请求
             Request req = new Request(id);
             req.setVersion(Version.getProtocolVersion());
             req.setTwoWay((flag & FLAG_TWOWAY) != 0);
@@ -133,8 +145,10 @@ public class DubboCodec extends ExchangeCodec {
             }
             try {
                 Object data;
+                //事件
                 if (req.isEvent()) {
                     byte[] eventPayload = CodecSupport.getPayload(is);
+                    //心跳
                     if (CodecSupport.isHeartBeat(eventPayload, proto)) {
                         // heart beat response data is always null;
                         data = null;

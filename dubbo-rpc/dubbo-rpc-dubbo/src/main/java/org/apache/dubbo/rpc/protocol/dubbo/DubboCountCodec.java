@@ -32,6 +32,9 @@ import java.io.IOException;
 import static org.apache.dubbo.rpc.Constants.INPUT_KEY;
 import static org.apache.dubbo.rpc.Constants.OUTPUT_KEY;
 
+/**
+ * dubbo协议默认编码解码器
+ */
 public final class DubboCountCodec implements Codec2 {
 
     private DubboCodec codec;
@@ -42,16 +45,32 @@ public final class DubboCountCodec implements Codec2 {
         codec = new DubboCodec(frameworkModel);
     }
 
+    /**
+     * 编码
+     * @param channel
+     * @param buffer
+     * @param msg
+     * @throws IOException
+     */
     @Override
     public void encode(Channel channel, ChannelBuffer buffer, Object msg) throws IOException {
+        //DubboCodec#encode -> ExchangeCodec#encode
         codec.encode(channel, buffer, msg);
     }
 
+    /**
+     * 解码
+     * @param channel
+     * @param buffer
+     * @return
+     * @throws IOException
+     */
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
         int save = buffer.readerIndex();
         MultiMessage result = MultiMessage.create();
         do {
+            //ExchangeCodec#decode
             Object obj = codec.decode(channel, buffer);
             if (Codec2.DecodeResult.NEED_MORE_INPUT == obj) {
                 buffer.readerIndex(save);
@@ -71,18 +90,25 @@ public final class DubboCountCodec implements Codec2 {
         return result;
     }
 
+    /**
+     * 记录消息长度
+     * @param result
+     * @param bytes
+     */
     private void logMessageLength(Object result, int bytes) {
         if (bytes <= 0) {
             return;
         }
         if (result instanceof Request) {
             try {
+                //记录input数据长度
                 ((RpcInvocation) ((Request) result).getData()).setAttachment(INPUT_KEY, String.valueOf(bytes));
             } catch (Throwable e) {
                 /* ignore */
             }
         } else if (result instanceof Response) {
             try {
+                //记录output数据长度
                 ((AppResponse) ((Response) result).getResult()).setAttachment(OUTPUT_KEY, String.valueOf(bytes));
             } catch (Throwable e) {
                 /* ignore */

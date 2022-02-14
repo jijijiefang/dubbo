@@ -124,8 +124,8 @@ public class NettyServer extends AbstractServer {
                             ch.pipeline().addLast("negotiation", new SslServerTlsHandler(getUrl()));
                         }
                         ch.pipeline()
-                                .addLast("decoder", adapter.getDecoder())//内部解码器
-                                .addLast("encoder", adapter.getEncoder())//内部编码器
+                                .addLast("decoder", adapter.getDecoder())//解码器
+                                .addLast("encoder", adapter.getEncoder())//编码器
                                 .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))//心跳检查
                                 .addLast("handler", nettyServerHandler);
                     }

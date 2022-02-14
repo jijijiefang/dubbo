@@ -141,7 +141,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         //构造请求的DefaultFuture
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
         try {
-            //AbstractPeer#send
+            //AbstractPeer#send -> NettyChannel#send
             channel.send(req);
         } catch (RemotingException e) {
             future.cancel();

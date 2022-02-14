@@ -38,6 +38,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * InvokerHandler
+ * 消费端动态代理生成代理类
  */
 public class InvokerInvocationHandler implements InvocationHandler {
     private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
@@ -97,7 +98,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
             }
             rpcInvocation.put(Profiler.PROFILER_KEY, bizProfiler);
             try {
-                //RPC调用
+                //RPC调用，recreate获取RPC结果
                 return invoker.invoke(rpcInvocation).recreate();
             } finally {
                 Profiler.release(bizProfiler);

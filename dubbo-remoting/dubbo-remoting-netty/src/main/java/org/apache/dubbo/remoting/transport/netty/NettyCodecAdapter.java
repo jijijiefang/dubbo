@@ -72,6 +72,9 @@ final class NettyCodecAdapter {
         return decoder;
     }
 
+    /**
+     * 内部编码器
+     */
     @Sharable
     private class InternalEncoder extends OneToOneEncoder {
 
@@ -89,6 +92,9 @@ final class NettyCodecAdapter {
         }
     }
 
+    /**
+     * 内部解码器
+     */
     private class InternalDecoder extends SimpleChannelUpstreamHandler {
 
         private org.apache.dubbo.remoting.buffer.ChannelBuffer buffer =
@@ -109,15 +115,21 @@ final class NettyCodecAdapter {
             }
 
             org.apache.dubbo.remoting.buffer.ChannelBuffer message;
+            //buffer可读
             if (buffer.readable()) {
+                //DynamicChannelBuffer
                 if (buffer instanceof DynamicChannelBuffer) {
+                    //从input写入buffer
                     buffer.writeBytes(input.toByteBuffer());
                     message = buffer;
                 } else {
+                    //buffer可读加上input可读数据长度
                     int size = buffer.readableBytes() + input.readableBytes();
                     message = org.apache.dubbo.remoting.buffer.ChannelBuffers.dynamicBuffer(
                             size > bufferSize ? size : bufferSize);
+                    //buffer内如写入message
                     message.writeBytes(buffer, buffer.readableBytes());
+                    //input内容写入message
                     message.writeBytes(input.toByteBuffer());
                 }
             } else {
@@ -134,15 +146,18 @@ final class NettyCodecAdapter {
                 do {
                     saveReaderIndex = message.readerIndex();
                     try {
+                        //对message数据解码
                         msg = codec.decode(channel, message);
                     } catch (IOException e) {
                         buffer = org.apache.dubbo.remoting.buffer.ChannelBuffers.EMPTY_BUFFER;
                         throw e;
                     }
+                    //当前解码需要更多数据输入
                     if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
                         message.readerIndex(saveReaderIndex);
                         break;
                     } else {
+                        //读完之后，开始读取的索引相同没有发生变化
                         if (saveReaderIndex == message.readerIndex()) {
                             buffer = org.apache.dubbo.remoting.buffer.ChannelBuffers.EMPTY_BUFFER;
                             throw new IOException("Decode without read data.");

@@ -107,16 +107,18 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
                 }
             }
             Profiler.removeBizProfiler();
-
+            //使用Future包装方法调用结果和invocation
             CompletableFuture<Object> future = wrapWithFuture(value, invocation);
             CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {
                 AppResponse result = new AppResponse(invocation);
+                //处理异常
                 if (t != null) {
                     if (t instanceof CompletionException) {
                         result.setException(t.getCause());
                     } else {
                         result.setException(t);
                     }
+                //设置结果
                 } else {
                     result.setValue(obj);
                 }
