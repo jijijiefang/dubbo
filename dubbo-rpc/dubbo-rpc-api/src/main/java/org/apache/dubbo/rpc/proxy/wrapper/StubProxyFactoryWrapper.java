@@ -44,6 +44,7 @@ import static org.apache.dubbo.rpc.Constants.STUB_KEY;
 
 /**
  * StubProxyFactoryWrapper
+ * 代理工厂包装类
  */
 public class StubProxyFactoryWrapper implements ProxyFactory {
 
@@ -84,7 +85,7 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
                     try {
                         Constructor<?> constructor = ReflectUtils.findConstructor(stubClass, serviceType);
                         proxy = (T) constructor.newInstance(new Object[]{proxy});
-                        //export stub service
+                        //export stub service 导出桩服务
                         URLBuilder urlBuilder = URLBuilder.from(url);
                         if (url.getParameter(STUB_EVENT_KEY, DEFAULT_STUB_EVENT)) {
                             urlBuilder.addParameter(STUB_EVENT_METHODS_KEY, StringUtils.join(Wrapper.getWrapper(proxy.getClass()).getDeclaredMethodNames(), ","));

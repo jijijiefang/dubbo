@@ -422,7 +422,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         //发布服务定义
         MetadataUtils.publishServiceDefinition(interfaceName, consumerUrl, getScopeModel(), getApplicationModel());
 
-        // create service proxy 创建服务代理对象
+        // create service proxy StubProxyFactoryWrapper#getProxy创建服务代理对象
         return (T) proxyFactory.getProxy(invoker, ProtocolUtils.isGeneric(generic));
     }
 
