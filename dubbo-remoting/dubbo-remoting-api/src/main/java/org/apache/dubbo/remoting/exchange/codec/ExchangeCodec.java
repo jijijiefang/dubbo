@@ -290,7 +290,9 @@ public class ExchangeCodec extends TelnetCodec {
 
         // encode request data. 请求数据编码
         int savedWriteIndex = buffer.writerIndex();
+        //设置写入索引为当前写入索引+header长度
         buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);
+        //输出流到缓冲区
         ChannelBufferOutputStream bos = new ChannelBufferOutputStream(buffer);
 
         if (req.isHeartbeat()) {
@@ -301,25 +303,29 @@ public class ExchangeCodec extends TelnetCodec {
             if (req.isEvent()) {
                 encodeEventData(channel, out, req.getData());
             } else {
+                //写入消息体到缓冲区
                 encodeRequestData(channel, out, req.getData(), req.getVersion());
             }
+            //刷写
             out.flushBuffer();
             if (out instanceof Cleanable) {
                 ((Cleanable) out).cleanup();
             }
         }
-
+        //刷写
         bos.flush();
         bos.close();
+        //写入数据长度，不包括请求头长度
         int len = bos.writtenBytes();
+        //是否超负荷
         checkPayload(channel, len);
         //请求体长度写入header
         Bytes.int2bytes(len, header, 12);
 
         // write 写入buffer
-        buffer.writerIndex(savedWriteIndex);
-        buffer.writeBytes(header); // write header.
-        buffer.writerIndex(savedWriteIndex + HEADER_LENGTH + len);
+        buffer.writerIndex(savedWriteIndex);//设置写入索引
+        buffer.writeBytes(header); // write header.写入请求头
+        buffer.writerIndex(savedWriteIndex + HEADER_LENGTH + len);//设置写入索引=保存的写入索引+请求头长度+请求体长度
     }
 
     /**
