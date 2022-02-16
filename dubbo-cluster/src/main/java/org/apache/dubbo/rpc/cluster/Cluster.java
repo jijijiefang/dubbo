@@ -56,6 +56,7 @@ public interface Cluster {
         if (StringUtils.isEmpty(name)) {
             name = Cluster.DEFAULT;
         }
+        //MockClusterWrapper包装的FailoverCluster
         return ScopeModelUtil.getApplicationModel(scopeModel).getExtensionLoader(Cluster.class).getExtension(name, wrap);
     }
 }

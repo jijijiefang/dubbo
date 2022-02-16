@@ -119,7 +119,7 @@ public class ExtensionLoader<T> {
     private volatile Class<?> cachedAdaptiveClass = null;
     private String cachedDefaultName;
     private volatile Throwable createAdaptiveInstanceError;
-
+    //缓存的包装器类
     private Set<Class<?>> cachedWrapperClasses;
 
     private Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<>();
@@ -1191,7 +1191,9 @@ public class ExtensionLoader<T> {
         //如果存在Adaptive注解
         if (clazz.isAnnotationPresent(Adaptive.class)) {
             cacheAdaptiveClass(clazz, overridden);
+        //判断是不是包装类
         } else if (isWrapperClass(clazz)) {
+            //包装类缓存起来
             cacheWrapperClass(clazz);
         } else {
             if (StringUtils.isEmpty(name)) {
@@ -1290,6 +1292,7 @@ public class ExtensionLoader<T> {
      */
     private boolean isWrapperClass(Class<?> clazz) {
         try {
+            //加载Class时发现存在构造方法，则该类是包装类
             clazz.getConstructor(type);
             return true;
         } catch (NoSuchMethodException e) {

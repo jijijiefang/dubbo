@@ -44,7 +44,7 @@ import static org.apache.dubbo.rpc.Constants.STUB_KEY;
 
 /**
  * StubProxyFactoryWrapper
- * 代理工厂包装类
+ * 桩代理工厂包装类
  */
 public class StubProxyFactoryWrapper implements ProxyFactory {
 

@@ -547,6 +547,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
     /**
      * This method tries to load all RegistryProtocolListener definitions, which are used to control the behaviour of invoker by interacting with defined, then uses those listeners to
      * change the status and behaviour of the MigrationInvoker.
+     * 此方法尝试加载所有RegistryProtocolListener定义，这些定义通过与已定义的进行交互来控制调用程序的行为，然后使用这些侦听器更改MigrationInvoker的状态和行为
      * <p>
      * Currently available Listener is MigrationRuleListener, one used to control the Migration behaviour with dynamically changing rules.
      *

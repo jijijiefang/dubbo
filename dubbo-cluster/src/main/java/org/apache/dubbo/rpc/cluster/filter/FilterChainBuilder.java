@@ -252,6 +252,11 @@ public interface FilterChainBuilder {
         }
     }
 
+    /**
+     *
+     * @param <T>
+     * @param <FILTER>
+     */
     class ClusterCallbackRegistrationInvoker<T, FILTER extends BaseFilter> extends CallbackRegistrationInvoker<T, FILTER>
         implements ClusterInvoker<T> {
         private ClusterInvoker<T> originalInvoker;
@@ -353,6 +358,12 @@ public interface FilterChainBuilder {
         }
     }
 
+    /**
+     *
+     * @param <T>
+     * @param <TYPE>
+     * @param <FILTER>
+     */
     @Experimental("Works for the same purpose as ClusterFilterChainNode, replace ClusterFilterChainNode with this one when proved stable enough")
     class CopyOfClusterFilterChainNode<T, TYPE extends ClusterInvoker<T>, FILTER extends BaseFilter>
         extends CopyOfFilterChainNode<T, TYPE, FILTER> implements ClusterInvoker<T> {

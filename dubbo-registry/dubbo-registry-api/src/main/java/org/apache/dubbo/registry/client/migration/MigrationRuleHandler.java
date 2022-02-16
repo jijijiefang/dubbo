@@ -37,6 +37,10 @@ public class MigrationRuleHandler<T> {
         this.consumerURL = url;
     }
 
+    /**
+     * 进行迁移
+     * @param rule
+     */
     public synchronized void doMigrate(MigrationRule rule) {
         if (migrationInvoker instanceof ServiceDiscoveryMigrationInvoker) {
             refreshInvoker(MigrationStep.FORCE_APPLICATION, 1.0f, rule);
@@ -53,7 +57,7 @@ public class MigrationRuleHandler<T> {
         } catch (Exception e) {
             logger.error("Failed to get step and threshold info from rule: " + rule, e);
         }
-
+        //刷新Invoker
         if (refreshInvoker(step, threshold, rule)) {
             // refresh success, update rule
             setMigrationRule(rule);

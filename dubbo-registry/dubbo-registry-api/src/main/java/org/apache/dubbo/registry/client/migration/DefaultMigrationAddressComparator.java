@@ -40,6 +40,14 @@ public class DefaultMigrationAddressComparator implements MigrationAddressCompar
 
     private Map<String, Map<String, Integer>> serviceMigrationData = new ConcurrentHashMap<>();
 
+    /**
+     * 是否迁移判断
+     * @param newInvoker
+     * @param oldInvoker
+     * @param rule
+     * @param <T>
+     * @return
+     */
     @Override
     public <T> boolean shouldMigrate(ClusterInvoker<T> newInvoker, ClusterInvoker<T> oldInvoker, MigrationRule rule) {
         Map<String, Integer> migrationData = serviceMigrationData.computeIfAbsent(oldInvoker.getUrl().getDisplayServiceKey(), _k -> new ConcurrentHashMap<>());

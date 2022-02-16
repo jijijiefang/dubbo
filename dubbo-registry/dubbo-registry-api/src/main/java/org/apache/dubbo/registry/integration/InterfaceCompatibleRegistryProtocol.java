@@ -52,12 +52,30 @@ public class InterfaceCompatibleRegistryProtocol extends RegistryProtocol {
                 .build();
     }
 
+    /**
+     * 获取接口Invoker
+     * @param cluster
+     * @param registry
+     * @param type
+     * @param url
+     * @param <T>
+     * @return
+     */
     @Override
     public <T> ClusterInvoker<T> getInvoker(Cluster cluster, Registry registry, Class<T> type, URL url) {
         DynamicDirectory<T> directory = new RegistryDirectory<>(type, url);
         return doCreateInvoker(directory, cluster, registry, type);
     }
 
+    /**
+     * 获取服务发现Invoker
+     * @param cluster
+     * @param registry
+     * @param type
+     * @param url
+     * @param <T>
+     * @return
+     */
     @Override
     public <T> ClusterInvoker<T> getServiceDiscoveryInvoker(Cluster cluster, Registry registry, Class<T> type, URL url) {
         registry = getRegistry(super.getRegistryUrl(url));
@@ -65,6 +83,17 @@ public class InterfaceCompatibleRegistryProtocol extends RegistryProtocol {
         return doCreateInvoker(directory, cluster, registry, type);
     }
 
+    /**
+     * 获取迁移Invoker
+     * @param registryProtocol
+     * @param cluster
+     * @param registry
+     * @param type
+     * @param url
+     * @param consumerUrl
+     * @param <T>
+     * @return
+     */
     @Override
     protected <T> ClusterInvoker<T> getMigrationInvoker(RegistryProtocol registryProtocol, Cluster cluster, Registry registry, Class<T> type, URL url, URL consumerUrl) {
 //        ClusterInvoker<T> invoker = getInvoker(cluster, registry, type, url);

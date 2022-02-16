@@ -23,7 +23,7 @@ import org.apache.dubbo.rpc.cluster.Directory;
 
 /**
  * mock impl
- *
+ * Cluster的包装类
  */
 public class MockClusterWrapper implements Cluster {
     //FailoverCluster
@@ -34,7 +34,7 @@ public class MockClusterWrapper implements Cluster {
     }
 
     /**
-     * 返回MockClusterInvoker包装的FailoverClusterInvoker
+     * 返回MockClusterInvoker，内部持有FailoverClusterInvoker
      * @param directory
      * @param buildFilterChain
      * @param <T>

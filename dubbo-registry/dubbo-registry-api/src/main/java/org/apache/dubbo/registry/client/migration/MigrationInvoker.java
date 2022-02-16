@@ -47,6 +47,10 @@ import java.util.concurrent.TimeUnit;
 import static org.apache.dubbo.registry.client.migration.model.MigrationStep.APPLICATION_FIRST;
 import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 
+/**
+ * 迁移Invoker
+ * @param <T>
+ */
 public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
     private Logger logger = LoggerFactory.getLogger(MigrationInvoker.class);
 
@@ -73,6 +77,7 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
                             Class<T> type,
                             URL url,
                             URL consumerUrl) {
+        //构造时invoker和serviceDiscoveryInvoker都是null
         this(null, null, registryProtocol, cluster, registry, type, url, consumerUrl);
     }
 
@@ -240,7 +245,9 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
     @Override
     public void migrateToApplicationFirstInvoker(MigrationRule newRule) {
         CountDownLatch latch = new CountDownLatch(0);
+        //刷新接口Invoker
         refreshInterfaceInvoker(latch);
+        //刷新服务发现Invoker
         refreshServiceDiscoveryInvoker(latch);
 
         // directly calculate preferred invoker, will not wait until address notify 直接计算首选调用程序，不会等到以后地址通知时重新进行地址通知计算
@@ -268,8 +275,15 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         }
     }
 
+    /**
+     * RPC调用
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
+        //当前可用Invoker为MockClusterInvoker或ServiceDiscoveryRegistryDirectory
         if (currentAvailableInvoker != null) {
             if (step == APPLICATION_FIRST) {
                 // call ratio calculation based on random value
@@ -429,8 +443,10 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
             if (serviceDiscoveryInvoker != null) {
                 serviceDiscoveryInvoker.destroy();
             }
+            //获取服务发现Invoker
             serviceDiscoveryInvoker = registryProtocol.getServiceDiscoveryInvoker(cluster, registry, type, url);
         }
+        //为Invoker设置监听器
         setListener(serviceDiscoveryInvoker, () -> {
             latch.countDown();
             if (reportService.hasReporter()) {
@@ -460,6 +476,7 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
             //InterfaceCompatibleRegistryProtocol#getInvoker，返回的是MockClusterInvoker
             invoker = registryProtocol.getInvoker(cluster, registry, type, url);
         }
+        //为Invoker里的DynamicDirectory设置监听器
         setListener(invoker, () -> {
             latch.countDown();
             if (reportService.hasReporter()) {
@@ -485,7 +502,7 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
             .getExtensionLoader(MigrationAddressComparator.class).getSupportedExtensionInstances();
         if (CollectionUtils.isNotEmpty(detectors)) {
             // pick preferred invoker 选择首选Invoker
-            // the real invoker choice in invocation will be affected by promotion
+            // the real invoker choice in invocation will be affected by promotion 真正的Invoker选择
             if (detectors.stream().allMatch(comparator -> comparator.shouldMigrate(serviceDiscoveryInvoker, invoker, migrationRule))) {
                 this.currentAvailableInvoker = serviceDiscoveryInvoker;
             } else {
