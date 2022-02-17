@@ -43,7 +43,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_K
 /**
  * ConsumerContextFilter set current RpcContext with invoker,invocation, local host, remote host and port
  * for consumer invoker.It does it to make the requires info available to execution thread's RpcContext.
- *
+ * ConsumerContextFilter使用调用程序、调用、本地主机、远程主机和消费者调用程序的端口设置当前RpcContext。它这样做是为了将requires信息提供给执行线程的RpcContext
  * @see Filter
  * @see RpcContext
  */
@@ -93,7 +93,7 @@ public class ConsumerContextFilter implements ClusterFilter, ClusterFilter.Liste
             ((RpcInvocation) invocation).addObjectAttachments(contextAttachments);
         }
 
-        // pass default timeout set by end user (ReferenceConfig)
+        // pass default timeout set by end user (ReferenceConfig) 通过最终用户设置的默认超时（ReferenceConfig）
         Object countDown = context.getObjectAttachment(TIME_COUNTDOWN_KEY);
         if (countDown != null) {
             TimeoutCountDown timeoutCountDown = (TimeoutCountDown) countDown;

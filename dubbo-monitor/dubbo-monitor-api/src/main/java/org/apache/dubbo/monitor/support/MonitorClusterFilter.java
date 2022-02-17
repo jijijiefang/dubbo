@@ -21,6 +21,9 @@ import org.apache.dubbo.rpc.cluster.filter.ClusterFilter;
 
 import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER;
 
+/**
+ * 监视器过滤器
+ */
 @Activate(group = {CONSUMER})
 public class MonitorClusterFilter extends MonitorFilter implements ClusterFilter {
 }

@@ -253,7 +253,7 @@ public interface FilterChainBuilder {
     }
 
     /**
-     *
+     * 集群回调注册Invoker
      * @param <T>
      * @param <FILTER>
      */
@@ -359,7 +359,7 @@ public interface FilterChainBuilder {
     }
 
     /**
-     *
+     * 用于与ClusterFilterChainNode相同的目的，当证明足够稳定时，用此代码替换ClusterFilterChainNode
      * @param <T>
      * @param <TYPE>
      * @param <FILTER>

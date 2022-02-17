@@ -37,6 +37,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.ASYNC_METHOD_INFO;
 
 /**
  * EventFilter
+ * 事件回调过滤器
  */
 @Activate(group = CommonConstants.CONSUMER)
 public class FutureFilter implements ClusterFilter, ClusterFilter.Listener {

@@ -77,6 +77,7 @@ public class DefaultFilterChainBuilder implements FilterChainBuilder {
 
     /**
      * build consumer cluster filter chain
+     * 构建消费者集群过滤链
      */
     @Override
     public <T> ClusterInvoker<T> buildClusterInvokerChain(final ClusterInvoker<T> originalInvoker, String key, String group) {
@@ -85,6 +86,7 @@ public class DefaultFilterChainBuilder implements FilterChainBuilder {
         List<ModuleModel> moduleModels = getModuleModelsFromUrl(url);
         List<ClusterFilter> filters;
         if (moduleModels != null && moduleModels.size() == 1) {
+            //加载所有org.apache.dubbo.rpc.cluster.filter.ClusterFilter的激活的实现类
             filters = ScopeModelUtil.getExtensionLoader(ClusterFilter.class, moduleModels.get(0)).getActivateExtension(url, key, group);
         } else if (moduleModels != null && moduleModels.size() > 1) {
             filters = new ArrayList<>();
@@ -106,6 +108,7 @@ public class DefaultFilterChainBuilder implements FilterChainBuilder {
                 final Invoker<T> next = last;
                 last = new CopyOfClusterFilterChainNode<>(originalInvoker, next, filter);
             }
+            //ClusterCallbackRegistrationInvoker -> CopyOfClusterFilterChainNode(ConsumerContextFilter) -> CopyOfClusterFilterChainNode(FutureFilter) -> CopyOfClusterFilterChainNode(MonitorClusterFilter) -> CopyOfClusterFilterChainNode(RouterSnapshotFilter)
             return new ClusterCallbackRegistrationInvoker<>(originalInvoker, last, filters);
         }
 
