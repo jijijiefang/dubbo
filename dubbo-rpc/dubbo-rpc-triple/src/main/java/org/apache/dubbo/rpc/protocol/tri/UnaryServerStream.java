@@ -29,6 +29,9 @@ import java.util.function.Function;
 
 import static org.apache.dubbo.rpc.protocol.tri.GrpcStatus.getStatus;
 
+/**
+ * 一元服务器流
+ */
 public class UnaryServerStream extends AbstractServerStream implements Stream {
 
     protected UnaryServerStream(URL url) {
@@ -74,6 +77,7 @@ public class UnaryServerStream extends AbstractServerStream implements Stream {
             if (invocation == null) {
                 return;
             }
+            //本地方法调用
             final Result result = getInvoker().invoke(invocation);
             CompletionStage<Object> future = result.thenApply(Function.identity());
             future.whenComplete((o, throwable) -> {

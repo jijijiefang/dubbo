@@ -23,6 +23,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http2.DefaultHttp2DataFrame;
 
+/**
+ * 字符串数据队列命令
+ */
 public class TextDataQueueCommand extends QueuedCommand.AbstractQueuedCommand {
 
     private final String data;

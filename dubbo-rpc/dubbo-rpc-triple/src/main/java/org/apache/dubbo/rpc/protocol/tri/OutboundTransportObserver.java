@@ -19,6 +19,7 @@ package org.apache.dubbo.rpc.protocol.tri;
 
 /**
  * Provides loosely state management for write message to outbound.
+ * 为向出站写入消息提供松散的状态管理
  */
 public abstract class OutboundTransportObserver implements TransportObserver {
 

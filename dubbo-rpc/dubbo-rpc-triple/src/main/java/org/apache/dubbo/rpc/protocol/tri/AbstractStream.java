@@ -47,6 +47,7 @@ import java.util.concurrent.Executor;
 
 /**
  * AbstractStream provides more detailed actions for streaming process.
+ * AbstractStream为流处理提供了更详细的操作
  */
 public abstract class AbstractStream implements Stream {
 
@@ -86,9 +87,9 @@ public abstract class AbstractStream implements Stream {
             .getExtensionLoader(MultipleSerialization.class)
             .getExtension(value);
         this.cancellationContext = new CancellationContext();
-        // A stream implementation must know how to process inbound transport message
+        // A stream implementation must know how to process inbound transport message 流实现必须知道如何处理入端传输消息
         this.inboundTransportObserver = createInboundTransportObserver();
-        // A stream implementation must know how to process inbound App level message
+        // A stream implementation must know how to process inbound App level message 流实现必须知道如何处理入站应用程序级别的消息
         this.inboundMessageObserver = createStreamObserver();
         this.acceptEncoding = Compressor.getAcceptEncoding(getUrl().getOrDefaultFrameworkModel());
     }

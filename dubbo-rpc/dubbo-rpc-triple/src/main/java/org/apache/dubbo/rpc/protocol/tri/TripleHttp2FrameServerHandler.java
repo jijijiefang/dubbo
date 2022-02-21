@@ -64,6 +64,12 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         this.pathResolver = frameworkModel.getExtensionLoader(PathResolver.class).getDefaultExtension();
     }
 
+    /**
+     * 通道就绪读事件
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         //HTTP2请求头帧
@@ -265,7 +271,7 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         }
         //是否是一元
         boolean isUnary = methodDescriptor == null || methodDescriptor.isUnary();
-        //
+        //根据类型构建UnaryServerStream或ServerStream
         final AbstractServerStream stream = AbstractServerStream.newServerStream(invoker.getUrl(), isUnary);
 
         Channel channel = ctx.channel();
@@ -274,7 +280,7 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
             .invoker(invoker)
             .methodName(methodName)
             .setDeCompressor(deCompressor)
-            .subscribe(transportObserver);
+            .subscribe(transportObserver);//设置服务端出端传输观察者
         if (methodDescriptor != null) {
             stream.method(methodDescriptor);
         } else {

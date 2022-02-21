@@ -17,6 +17,9 @@
 
 package org.apache.dubbo.rpc.protocol.tri;
 
+/**
+ * 服务端一元入端传输观察者
+ */
 abstract class ServerUnaryInboundTransportObserver extends InboundTransportObserver implements TransportObserver {
     protected static final String DUPLICATED_DATA = "Duplicated data";
 

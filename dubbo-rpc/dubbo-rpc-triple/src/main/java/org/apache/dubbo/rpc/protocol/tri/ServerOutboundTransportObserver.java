@@ -27,7 +27,7 @@ import io.netty.handler.codec.http2.DefaultHttp2Headers;
 import io.netty.handler.codec.http2.Http2Headers;
 
 /**
- * 服务端输出传输观察者
+ * 服务端出端传输观察者
  */
 public class ServerOutboundTransportObserver extends OutboundTransportObserver {
 
