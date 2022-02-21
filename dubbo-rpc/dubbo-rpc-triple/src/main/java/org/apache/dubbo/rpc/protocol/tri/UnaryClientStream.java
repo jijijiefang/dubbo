@@ -22,6 +22,9 @@ import org.apache.dubbo.remoting.exchange.Response;
 import org.apache.dubbo.remoting.exchange.support.DefaultFuture2;
 import org.apache.dubbo.rpc.AppResponse;
 
+/**
+ * 一元客户端流
+ */
 public class UnaryClientStream extends AbstractClientStream implements Stream {
 
     protected UnaryClientStream(URL url) {
@@ -40,16 +43,22 @@ public class UnaryClientStream extends AbstractClientStream implements Stream {
     }
 
 
+    /**
+     * 客户端一元入端传输观察者
+     */
     private class ClientUnaryInboundTransportObserver extends ServerUnaryInboundTransportObserver {
 
         @Override
         public void onComplete() {
             execute(() -> {
+                //获取元数据状态
                 final GrpcStatus status = extractStatusFromMeta(getHeaders());
                 if (GrpcStatus.Code.isOk(status.code.code)) {
                     try {
                         AppResponse result;
+                        //不是void类型
                         if (!Void.TYPE.equals(getMethodDescriptor().getReturnClass())) {
+                            //反序列化响应数据
                             final Object resp = deserializeResponse(getData());
                             result = new AppResponse(resp);
                         } else {
@@ -58,6 +67,7 @@ public class UnaryClientStream extends AbstractClientStream implements Stream {
                         Response response = new Response(getRequestId(), TripleConstant.TRI_VERSION);
                         result.setObjectAttachments(parseMetadataToAttachmentMap(getTrailers()));
                         response.setResult(result);
+                        //设置Future完成
                         DefaultFuture2.received(getConnection(), response);
                     } catch (Exception e) {
                         final GrpcStatus clientStatus = GrpcStatus.fromCode(GrpcStatus.Code.INTERNAL)

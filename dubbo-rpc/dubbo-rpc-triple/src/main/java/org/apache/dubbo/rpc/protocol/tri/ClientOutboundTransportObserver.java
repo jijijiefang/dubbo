@@ -25,7 +25,8 @@ import io.netty.channel.ChannelPromise;
 
 /**
  * Send stream data to remote
- * {@link ClientOutboundTransportObserver#promise} will be set success after rst or complete sent,
+ * 将流数据发送到远程
+ * {@link ClientOutboundTransportObserver#promise} will be set success after rst or complete sent,promise将在rst或完成发送后设置为成功
  */
 public class ClientOutboundTransportObserver extends OutboundTransportObserver {
 

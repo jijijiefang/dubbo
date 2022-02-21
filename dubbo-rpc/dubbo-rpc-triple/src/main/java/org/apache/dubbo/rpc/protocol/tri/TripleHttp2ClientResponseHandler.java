@@ -53,11 +53,19 @@ public final class TripleHttp2ClientResponseHandler extends SimpleChannelInbound
         }
     }
 
+    /**
+     * 由channelRead事件调用
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Http2StreamFrame msg) throws Exception {
         if (msg instanceof Http2HeadersFrame) {
+            //如果是请求头读取
             onHeadersRead(ctx, (Http2HeadersFrame) msg);
         } else if (msg instanceof Http2DataFrame) {
+            //请求体读取
             onDataRead(ctx, (Http2DataFrame) msg);
         } else {
             super.channelRead(ctx, msg);
@@ -71,6 +79,11 @@ public final class TripleHttp2ClientResponseHandler extends SimpleChannelInbound
         ctx.close();
     }
 
+    /**
+     * 读取响应请求头
+     * @param ctx
+     * @param msg
+     */
     private void onHeadersRead(ChannelHandlerContext ctx, Http2HeadersFrame msg) {
         Http2Headers headers = msg.headers();
         final AbstractClientStream clientStream = ctx.channel().attr(TripleConstant.CLIENT_STREAM_KEY).get();
@@ -78,12 +91,14 @@ public final class TripleHttp2ClientResponseHandler extends SimpleChannelInbound
         if (null != messageEncoding) {
             String compressorStr = messageEncoding.toString();
             if (!DEFAULT_COMPRESSOR.equals(compressorStr)) {
+                //获取压缩器
                 Compressor compressor = Compressor.getCompressor(clientStream.getUrl().getOrDefaultFrameworkModel(), compressorStr);
                 if (null == compressor) {
                     throw GrpcStatus.fromCode(GrpcStatus.Code.UNIMPLEMENTED)
                         .withDescription(String.format("Grpc-encoding '%s' is not supported", compressorStr))
                         .asException();
                 } else {
+                    //设置压缩器
                     clientStream.setDeCompressor(compressor);
                 }
             }
@@ -108,12 +123,20 @@ public final class TripleHttp2ClientResponseHandler extends SimpleChannelInbound
         ctx.close();
     }
 
+    /**
+     * 消息体读取事件
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     public void onDataRead(ChannelHandlerContext ctx, Http2DataFrame msg) throws Exception {
+        //沿着pipeline向后传播
         super.channelRead(ctx, msg.content());
         if (msg.isEndStream()) {
             final AbstractClientStream clientStream = ctx.channel().attr(TripleConstant.CLIENT_STREAM_KEY).get();
-            // stream already closed;
+            // stream already closed; 流已经关闭了
             if (clientStream != null) {
+                //读取完毕
                 clientStream.inboundTransportObserver().onComplete();
             }
         }

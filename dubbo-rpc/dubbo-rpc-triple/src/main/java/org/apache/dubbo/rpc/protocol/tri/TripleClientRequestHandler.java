@@ -46,6 +46,7 @@ public class TripleClientRequestHandler extends ChannelDuplexHandler {
         }
         final Request req = (Request) msg;
         Connection connection = Connection.getConnectionFromChannel(ctx.channel());
+        //构建UnaryClientStream或ClientStream
         final AbstractClientStream stream = AbstractClientStream.newClientStream(req, connection);
         final Http2StreamChannelBootstrap streamChannelBootstrap = new Http2StreamChannelBootstrap(ctx.channel());
         streamChannelBootstrap.open()
@@ -57,10 +58,10 @@ public class TripleClientRequestHandler extends ChannelDuplexHandler {
                         .addLast(new TripleHttp2ClientResponseHandler())
                         .addLast(new GrpcDataDecoder(Integer.MAX_VALUE, true))
                         .addLast(new TripleClientInboundHandler());
-                    channel.attr(TripleConstant.CLIENT_STREAM_KEY).set(stream);
+                    channel.attr(TripleConstant.CLIENT_STREAM_KEY).set(stream);//设置客户端stream
                     DefaultFuture2.addTimeoutListener(req.getId(), channel::close);
                     WriteQueue writeQueue = new WriteQueue(channel);
-                    // Start call only when the channel creation is successful
+                    // Start call only when the channel creation is successful 只有当channel创建成功以后开始调用
                     stream.startCall(writeQueue, promise);
                 } else {
                     promise.tryFailure(future.cause());

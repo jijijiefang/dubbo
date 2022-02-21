@@ -73,9 +73,16 @@ public class TripleInvoker<T> extends AbstractInvoker<T> {
         super(serviceType, url, new String[]{INTERFACE_KEY, GROUP_KEY, TOKEN_KEY});
         this.invokers = invokers;
         ConnectionManager connectionManager = url.getOrDefaultFrameworkModel().getExtensionLoader(ConnectionManager.class).getExtension("multiple");
+        //构建客户端，连接到服务端
         this.connection = connectionManager.connect(url);
     }
 
+    /**
+     * 进行RPC调用
+     * @param invocation
+     * @return
+     * @throws Throwable
+     */
     @Override
     protected Result doInvoke(final Invocation invocation) throws Throwable {
         RpcInvocation inv = (RpcInvocation) invocation;
@@ -89,13 +96,13 @@ public class TripleInvoker<T> extends AbstractInvoker<T> {
             int timeout = calculateTimeout(invocation, methodName);
             invocation.setAttachment(TIMEOUT_KEY, timeout);
             ExecutorService executor = getCallbackExecutor(getUrl(), inv);
-            // create request.
+            // create request. 创建请求
             Request req = new Request();
             req.setVersion(Version.getProtocolVersion());
             req.setTwoWay(true);
             req.setData(inv);
 
-            // try connect
+            // try connect 判断是否已经连接，没有的话进行连接
             connection.isAvailable();
 
             DefaultFuture2 future = DefaultFuture2.newFuture(this.connection, req, timeout, executor);
@@ -111,9 +118,11 @@ public class TripleInvoker<T> extends AbstractInvoker<T> {
                 response.setErrorMessage(String.format("Connect to %s failed", this));
                 DefaultFuture2.received(connection, response);
             } else {
+                //请求写入连接
                 final ChannelFuture writeFuture = this.connection.write(req);
                 writeFuture.addListener(future1 -> {
                     if (future1.isSuccess()) {
+                        //设置发送时间
                         DefaultFuture2.sent(req);
                     } else {
                         Response response = new Response(req.getId(), req.getVersion());

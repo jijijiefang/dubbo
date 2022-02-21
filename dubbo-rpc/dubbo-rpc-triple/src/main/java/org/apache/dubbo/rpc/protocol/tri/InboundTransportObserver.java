@@ -40,12 +40,18 @@ public abstract class InboundTransportObserver implements TransportObserver {
         }
     }
 
+    /**
+     * 从元数据提取状态
+     * @param metadata
+     * @return
+     */
     protected GrpcStatus extractStatusFromMeta(Metadata metadata) {
+        //不包含"grpc-status"状态返回成功
         if (!metadata.contains(TripleHeaderEnum.STATUS_KEY.getHeader())) {
             return GrpcStatus.fromCode(Code.OK);
         }
         final int code = Integer.parseInt(metadata.get(TripleHeaderEnum.STATUS_KEY.getHeader()).toString());
-
+        //状态成功
         if (Code.isOk(code)) {
             return GrpcStatus.fromCode(Code.OK);
         }

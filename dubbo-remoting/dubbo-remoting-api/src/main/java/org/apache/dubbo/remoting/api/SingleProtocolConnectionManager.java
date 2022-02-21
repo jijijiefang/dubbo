@@ -29,6 +29,12 @@ public class SingleProtocolConnectionManager implements ConnectionManager {
 
     private final ConcurrentMap<String, Connection> connections = PlatformDependent.newConcurrentHashMap();
 
+    /**
+     * 连接到服务端
+     * @param url
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public Connection connect(URL url) throws RemotingException {
         if (url == null) {
@@ -36,10 +42,12 @@ public class SingleProtocolConnectionManager implements ConnectionManager {
         }
         return connections.compute(url.getAddress(), (address, conn) -> {
             if (conn == null) {
+                //新建连接
                 final Connection created = new Connection(url);
                 created.getClosePromise().addListener(future -> connections.remove(address, created));
                 return created;
             } else {
+                //重置连接
                 conn.retain();
                 return conn;
             }

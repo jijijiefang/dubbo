@@ -194,9 +194,15 @@ public abstract class AbstractClientStream extends AbstractStream implements Str
         }
     }
 
+    /**
+     * 开始调用
+     * @param queue
+     * @param promise
+     */
     protected void startCall(WriteQueue queue, ChannelPromise promise) {
         execute(() -> {
             final ClientOutboundTransportObserver clientTransportObserver = new ClientOutboundTransportObserver(queue, promise);
+            //订阅客户端出端传输观察者
             subscribe(clientTransportObserver);
             try {
                 doOnStartCall();
@@ -289,6 +295,11 @@ public abstract class AbstractClientStream extends AbstractStream implements Str
         return connection;
     }
 
+    /**
+     * 序列化请求体
+     * @param value
+     * @return
+     */
     protected byte[] encodeRequest(Object value) {
         final byte[] out;
         final Object obj;
@@ -356,6 +367,11 @@ public abstract class AbstractClientStream extends AbstractStream implements Str
         return value;
     }
 
+    /**
+     * 反序列化响应数据
+     * @param data
+     * @return
+     */
     protected Object deserializeResponse(byte[] data) {
         ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         try {
@@ -393,20 +409,25 @@ public abstract class AbstractClientStream extends AbstractStream implements Str
     }
 
 
+    /**
+     * 创建请求元数据
+     * @param inv
+     * @return
+     */
     protected Metadata createRequestMeta(RpcInvocation inv) {
         Metadata metadata = new DefaultMetadata();
-        // put http2 params
+        // put http2 params 设置http2参数
         metadata.put(Http2Headers.PseudoHeaderName.SCHEME.value(), this.getScheme())
-            .put(Http2Headers.PseudoHeaderName.PATH.value(), getMethodPath(inv))
-            .put(Http2Headers.PseudoHeaderName.AUTHORITY.value(), getUrl().getAddress())
-            .put(Http2Headers.PseudoHeaderName.METHOD.value(), HttpMethod.POST.asciiName());
+            .put(Http2Headers.PseudoHeaderName.PATH.value(), getMethodPath(inv))//设置":path"
+            .put(Http2Headers.PseudoHeaderName.AUTHORITY.value(), getUrl().getAddress())//设置":authority"
+            .put(Http2Headers.PseudoHeaderName.METHOD.value(), HttpMethod.POST.asciiName());//设置请求方式
 
-        metadata.put(TripleHeaderEnum.CONTENT_TYPE_KEY.getHeader(), TripleConstant.CONTENT_PROTO)
-            .put(TripleHeaderEnum.TIMEOUT.getHeader(), inv.get(CommonConstants.TIMEOUT_KEY) + "m")
+        metadata.put(TripleHeaderEnum.CONTENT_TYPE_KEY.getHeader(), TripleConstant.CONTENT_PROTO)//设置"content-type"
+            .put(TripleHeaderEnum.TIMEOUT.getHeader(), inv.get(CommonConstants.TIMEOUT_KEY) + "m")//设置超时时间
             .put(HttpHeaderNames.TE, HttpHeaderValues.TRAILERS)
         ;
 
-        metadata.putIfNotNull(TripleHeaderEnum.SERVICE_VERSION.getHeader(), getUrl().getVersion())
+        metadata.putIfNotNull(TripleHeaderEnum.SERVICE_VERSION.getHeader(), getUrl().getVersion())//设置服务版本
             .putIfNotNull(TripleHeaderEnum.CONSUMER_APP_NAME_KEY.getHeader(),
                 (String) inv.getObjectAttachments().remove(CommonConstants.APPLICATION_KEY))
             .putIfNotNull(TripleHeaderEnum.CONSUMER_APP_NAME_KEY.getHeader(),
@@ -427,6 +448,9 @@ public abstract class AbstractClientStream extends AbstractStream implements Str
         return "/" + inv.getObjectAttachment(CommonConstants.PATH_KEY) + "/" + inv.getMethodName();
     }
 
+    /**
+     * 客户端流观察者实现啊类
+     */
     protected class ClientStreamObserverImpl extends CancelableStreamObserver<Object> implements ClientStreamObserver<Object> {
 
         public ClientStreamObserverImpl(CancellationContext cancellationContext) {
@@ -435,10 +459,12 @@ public abstract class AbstractClientStream extends AbstractStream implements Str
 
         @Override
         public void onNext(Object data) {
+            //如果允许写入Header
             if (getState().allowSendMeta()) {
                 final Metadata metadata = createRequestMeta(getRpcInvocation());
                 outboundTransportObserver().onMetadata(metadata, false);
             }
+            //如果允许写入消息体
             if (getState().allowSendData()) {
                 final byte[] bytes = encodeRequest(data);
                 outboundTransportObserver().onData(bytes, false);

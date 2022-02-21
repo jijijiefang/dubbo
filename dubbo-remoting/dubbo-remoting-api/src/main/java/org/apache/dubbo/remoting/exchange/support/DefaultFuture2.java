@@ -124,10 +124,21 @@ public class DefaultFuture2 extends CompletableFuture<Object> {
         }
     }
 
+    /**
+     * 完成Future
+     * @param connection
+     * @param response
+     */
     public static void received(Connection connection, Response response) {
         received(connection, response, false);
     }
 
+    /**
+     * 完成Future
+     * @param connection
+     * @param response
+     * @param timeout
+     */
     public static void received(Connection connection, Response response, boolean timeout) {
         DefaultFuture2 future = FUTURES.remove(response.getId());
         if (future != null) {
@@ -177,12 +188,18 @@ public class DefaultFuture2 extends CompletableFuture<Object> {
         this.cancel(true);
     }
 
+    /**
+     * 设置Future
+     * @param res
+     */
     private void doReceived(Response res) {
         if (res == null) {
             throw new IllegalStateException("response cannot be null");
         }
         if (res.getStatus() == Response.OK) {
+            //Future#complete
             this.complete(res.getResult());
+        //超时异常
         } else if (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) {
             this.completeExceptionally(new TimeoutException(res.getStatus() == Response.SERVER_TIMEOUT, null, connection.getRemote(), res.getErrorMessage()));
         } else {

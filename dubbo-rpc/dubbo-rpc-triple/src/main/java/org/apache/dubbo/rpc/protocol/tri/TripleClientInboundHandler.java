@@ -19,6 +19,9 @@ package org.apache.dubbo.rpc.protocol.tri;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+/**
+ * Triple客户端入端处理类
+ */
 public class TripleClientInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
