@@ -51,6 +51,9 @@ import java.util.List;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.apache.dubbo.rpc.protocol.tri.Compressor.DEFAULT_COMPRESSOR;
 
+/**
+ * TripleHttp2协议帧服务端处理类
+ */
 public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(TripleHttp2FrameServerHandler.class);
     private final PathResolver pathResolver;
@@ -63,8 +66,10 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        //HTTP2请求头帧
         if (msg instanceof Http2HeadersFrame) {
             onHeadersRead(ctx, (Http2HeadersFrame) msg);
+        //HTTP2请求数据帧
         } else if (msg instanceof Http2DataFrame) {
             onDataRead(ctx, (Http2DataFrame) msg);
         } else if (msg instanceof ReferenceCounted) {
@@ -101,23 +106,34 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         serverStream.transportError(status, null, true);
     }
 
+    /**
+     * 处理读数据
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     public void onDataRead(ChannelHandlerContext ctx, Http2DataFrame msg) throws Exception {
+        //使channelRead事件向后传播
         super.channelRead(ctx, msg.content());
-
+        //如果是流结束了
         if (msg.isEndStream()) {
             final AbstractServerStream serverStream = ctx.channel().attr(TripleConstant.SERVER_STREAM_KEY).get();
             if (serverStream != null) {
+                //流的进入传输观察者关闭事件，
                 serverStream.inboundTransportObserver().onComplete();
             }
         }
     }
 
     private Invoker<?> getInvoker(Http2Headers headers, String serviceName) {
+        //服务版本
         final String version = headers.contains(TripleHeaderEnum.SERVICE_VERSION.getHeader()) ? headers.get(
             TripleHeaderEnum.SERVICE_VERSION.getHeader()).toString() : null;
+        //服务分组
         final String group = headers.contains(TripleHeaderEnum.SERVICE_GROUP.getHeader()) ? headers.get(TripleHeaderEnum.SERVICE_GROUP.getHeader())
             .toString() : null;
         final String key = URL.buildKey(serviceName, group, version);
+        //获取服务发布时导出的Invoker
         Invoker<?> invoker = pathResolver.resolve(key);
         if (invoker == null) {
             invoker = pathResolver.resolve(serviceName);
@@ -125,18 +141,25 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         return invoker;
     }
 
+    /**
+     * 读请求头
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     public void onHeadersRead(ChannelHandlerContext ctx, Http2HeadersFrame msg) throws Exception {
         final Http2Headers headers = msg.headers();
+        //每个channel新建一个WriteQueue
         WriteQueue writeQueue = new WriteQueue(ctx.channel());
         ServerOutboundTransportObserver transportObserver = new ServerOutboundTransportObserver(writeQueue);
-
+        //只支持POST方式
         if (!HttpMethod.POST.asciiName().contentEquals(headers.method())) {
             responsePlainTextError(writeQueue, HttpResponseStatus.METHOD_NOT_ALLOWED.code(),
                 GrpcStatus.fromCode(GrpcStatus.Code.INTERNAL)
                     .withDescription(String.format("Method '%s' is not supported", headers.method())));
             return;
         }
-
+        //路径为空
         if (headers.path() == null) {
             responsePlainTextError(writeQueue, HttpResponseStatus.NOT_FOUND.code(),
                 GrpcStatus.fromCode(Code.UNIMPLEMENTED.code).withDescription("Expected path but is missing"));
@@ -144,6 +167,7 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         }
 
         final String path = headers.path().toString();
+        //路径第一个字符不是'/'
         if (path.charAt(0) != '/') {
             responsePlainTextError(writeQueue, HttpResponseStatus.NOT_FOUND.code(),
                 GrpcStatus.fromCode(Code.UNIMPLEMENTED.code)
@@ -152,6 +176,7 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         }
 
         final CharSequence contentType = HttpUtil.getMimeType(headers.get(HttpHeaderNames.CONTENT_TYPE));
+        //"content-type"为空
         if (contentType == null) {
             responsePlainTextError(writeQueue, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE.code(),
                 GrpcStatus.fromCode(GrpcStatus.Code.INTERNAL.code)
@@ -160,6 +185,7 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         }
 
         final String contentString = contentType.toString();
+        //不支持的"content-type"，必须是"application/grpc"
         if (!supportContentType(contentString)) {
             responsePlainTextError(writeQueue, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE.code(),
                 GrpcStatus.fromCode(Code.INTERNAL.code)
@@ -168,16 +194,21 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         }
 
         String[] parts = path.split("/");
+        //路径不合法
         if (parts.length != 3) {
             responseErr(transportObserver, GrpcStatus.fromCode(Code.UNIMPLEMENTED)
                 .withDescription("Bad path format:" + path));
             return;
         }
+        //服务名称
         String serviceName = parts[1];
+        //方法名称
         String originalMethodName = parts[2];
+        //服务名称+方法名称
         String methodName = Character.toLowerCase(originalMethodName.charAt(0)) + originalMethodName.substring(1);
 
         final Invoker<?> invoker = getInvoker(headers, serviceName);
+        //服务未找到
         if (invoker == null) {
             responseErr(transportObserver, GrpcStatus.fromCode(Code.UNIMPLEMENTED)
                 .withDescription("Service not found:" + serviceName));
@@ -185,6 +216,7 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         }
         FrameworkServiceRepository repo = frameworkModel.getServiceRepository();
         ProviderModel providerModel = repo.lookupExportedService(invoker.getUrl().getServiceKey());
+        //服务未找到
         if (providerModel == null || providerModel.getServiceModel() == null) {
             responseErr(transportObserver, GrpcStatus.fromCode(Code.UNIMPLEMENTED)
                 .withDescription("Service not found:" + serviceName));
@@ -195,14 +227,14 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         List<MethodDescriptor> methodDescriptors = null;
 
         if (isGeneric(methodName)) {
-            // There should be one and only one
+            // There should be one and only one 只有一个这样的方法
             methodDescriptor = ServiceDescriptorInternalCache.genericService().getMethods(methodName).get(0);
         } else if (isEcho(methodName)) {
-            // There should be one and only one
+            // There should be one and only one 只有一个这样的方法
             methodDescriptor = ServiceDescriptorInternalCache.echoService().getMethods(methodName).get(0);
         } else {
             methodDescriptors = providerModel.getServiceModel().getMethods(methodName);
-            // try upper-case method
+            // try upper-case method 尝试大写字母方法
             if (CollectionUtils.isEmpty(methodDescriptors)) {
                 methodDescriptors = providerModel.getServiceModel().getMethods(originalMethodName);
             }
@@ -231,12 +263,13 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
                 deCompressor = compressor;
             }
         }
-
+        //是否是一元
         boolean isUnary = methodDescriptor == null || methodDescriptor.isUnary();
+        //
         final AbstractServerStream stream = AbstractServerStream.newServerStream(invoker.getUrl(), isUnary);
 
         Channel channel = ctx.channel();
-        // You can add listeners to ChannelPromise here if you want to listen for the result of sending a frame
+        // You can add listeners to ChannelPromise here if you want to listen for the result of sending a frame 如果想监听发送帧的结果，可以在此处向ChannelPromise添加侦听器
         stream.service(providerModel.getServiceModel())
             .invoker(invoker)
             .methodName(methodName)
@@ -245,7 +278,7 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         if (methodDescriptor != null) {
             stream.method(methodDescriptor);
         } else {
-            // Then you need to find the corresponding parameter according to the request body
+            // Then you need to find the corresponding parameter according to the request body 然后需要根据请求体找到相应的参数
             stream.methods(methodDescriptors);
         }
 
@@ -254,6 +287,7 @@ public class TripleHttp2FrameServerHandler extends ChannelDuplexHandler {
         if (msg.isEndStream()) {
             observer.onComplete();
         }
+        //构建好的服务端流放到CHANEL里，用于后续取出使用
         channel.attr(TripleConstant.SERVER_STREAM_KEY).set(stream);
     }
 

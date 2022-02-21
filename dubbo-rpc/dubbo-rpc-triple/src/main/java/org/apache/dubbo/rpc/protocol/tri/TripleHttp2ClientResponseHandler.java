@@ -30,6 +30,9 @@ import io.netty.handler.codec.http2.Http2StreamFrame;
 
 import static org.apache.dubbo.rpc.protocol.tri.Compressor.DEFAULT_COMPRESSOR;
 
+/**
+ * TripleHttp2客户端响应处理类
+ */
 public final class TripleHttp2ClientResponseHandler extends SimpleChannelInboundHandler<Http2StreamFrame> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TripleHttp2ClientResponseHandler.class);
 

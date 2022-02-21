@@ -31,7 +31,7 @@ public class Http2ProtocolDetector implements ProtocolDetector {
         int prefaceLen = clientPrefaceString.readableBytes();
         int bytesRead = min(in.readableBytes(), prefaceLen);
 
-        // If the input so far doesn't match the preface, break the connection.
+        // If the input so far doesn't match the preface, break the connection. 如果到目前为止输入与前言不匹配，断开连接
         if (bytesRead == 0 || !ByteBufUtil.equals(in, 0,
                 clientPrefaceString, 0, bytesRead)) {
 

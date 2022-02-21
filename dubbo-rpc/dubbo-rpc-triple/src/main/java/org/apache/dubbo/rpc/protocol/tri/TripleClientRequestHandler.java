@@ -27,6 +27,9 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http2.Http2StreamChannel;
 import io.netty.handler.codec.http2.Http2StreamChannelBootstrap;
 
+/**
+ * Triple客户端请求处理类
+ */
 public class TripleClientRequestHandler extends ChannelDuplexHandler {
 
     private final FrameworkModel frameworkModel;

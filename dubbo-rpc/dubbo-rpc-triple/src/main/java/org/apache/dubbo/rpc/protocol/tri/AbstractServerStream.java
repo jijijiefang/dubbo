@@ -133,7 +133,7 @@ public abstract class AbstractServerStream extends AbstractStream implements Str
 
     /**
      * Build the RpcInvocation with metadata and execute headerFilter
-     *
+     * 使用元数据构建rpcinocation并执行headerFilter
      * @param metadata request header
      * @return RpcInvocation
      */
@@ -212,7 +212,7 @@ public abstract class AbstractServerStream extends AbstractStream implements Str
 
     /**
      * Deserialize the stream request data
-     *
+     * 反序列化流请求数据
      * @param data request data
      * @return Deserialized object
      */
@@ -297,6 +297,7 @@ public abstract class AbstractServerStream extends AbstractStream implements Str
 
     /**
      * create basic meta data
+     * 创建响应数据
      */
     protected Metadata createResponseMeta() {
         Metadata metadata = new DefaultMetadata();
@@ -307,6 +308,11 @@ public abstract class AbstractServerStream extends AbstractStream implements Str
         return metadata;
     }
 
+    /**
+     * 序列化响应数据
+     * @param value
+     * @return
+     */
     protected byte[] encodeResponse(Object value) {
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         try {
@@ -315,6 +321,7 @@ public abstract class AbstractServerStream extends AbstractStream implements Str
             }
             final Message message;
             if (getMethodDescriptor().isNeedWrap()) {
+                //序列化响应数据
                 message = wrapResp(getUrl(), getSerializeType(), value, getMethodDescriptor(),
                     getMultipleSerialization());
             } else {
@@ -381,6 +388,15 @@ public abstract class AbstractServerStream extends AbstractStream implements Str
                 .withCause(throwable));
     }
 
+    /**
+     * 包装响应
+     * @param url
+     * @param serializeType
+     * @param resp
+     * @param desc
+     * @param multipleSerialization
+     * @return
+     */
     public TripleWrapper.TripleResponseWrapper wrapResp(URL url, String serializeType, Object resp,
                                                         MethodDescriptor desc,
                                                         MultipleSerialization multipleSerialization) {
@@ -389,6 +405,7 @@ public abstract class AbstractServerStream extends AbstractStream implements Str
                 .setType(desc.getReturnClass().getName())
                 .setSerializeType(convertHessianToWrapper(serializeType));
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            //序列化响应数据
             multipleSerialization.serialize(url, serializeType, desc.getReturnClass().getName(), resp, bos);
             builder.setData(ByteString.copyFrom(bos.toByteArray()));
             bos.close();

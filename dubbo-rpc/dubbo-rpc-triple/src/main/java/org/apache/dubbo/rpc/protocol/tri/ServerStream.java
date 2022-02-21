@@ -38,13 +38,18 @@ public class ServerStream extends AbstractServerStream implements Stream {
         return new ServerStreamInboundTransportObserver();
     }
 
+    /**
+     * 服务端流观察者实现类
+     */
     private class ServerStreamObserverImpl implements ServerStreamObserver<Object> {
 
         @Override
         public void onNext(Object data) {
             if (getState().allowSendMeta()) {
+                //ServerOutboundTransportObserver#onMetadata
                 outboundTransportObserver().onMetadata(createResponseMeta(), false);
             }
+            //编码响应数据
             final byte[] bytes = encodeResponse(data);
             if (bytes == null) {
                 return;
@@ -86,6 +91,9 @@ public class ServerStream extends AbstractServerStream implements Stream {
         }
     }
 
+    /**
+     * 服务端流输入传输观察者
+     */
     private class ServerStreamInboundTransportObserver extends InboundTransportObserver implements TransportObserver {
 
         /**
@@ -158,6 +166,7 @@ public class ServerStream extends AbstractServerStream implements Stream {
 
         /**
          * call observer onNext
+         * 调用观察者下一个
          */
         private void biStreamOnData(byte[] in) {
             final Object[] arguments = deserializeRequest(in);
@@ -168,7 +177,7 @@ public class ServerStream extends AbstractServerStream implements Stream {
 
         /**
          * call api impl code
-         *
+         * 调用api实现代码
          * <pre class="code">
          * public void cancelServerStream(GreeterRequest request, StreamObserver<GreeterReply> replyStream) {
          *      // happen on this
@@ -181,10 +190,14 @@ public class ServerStream extends AbstractServerStream implements Stream {
             try {
                 RpcContext.restoreCancellationContext(getCancellationContext());
                 RpcInvocation inv = buildInvocation(getHeaders());
+                //反序列化请求
                 final Object[] arguments = deserializeRequest(in);
                 if (arguments != null) {
+                    //RpcInvocation设置参数
                     inv.setArguments(new Object[]{arguments[0], inboundMessageObserver()});
+                    //方法调用
                     final Result result = getInvoker().invoke(inv);
+                    //处理异常
                     if (result.hasException()) {
                         transportError(GrpcStatus.getStatus(result.getException()));
                     }
@@ -204,6 +217,7 @@ public class ServerStream extends AbstractServerStream implements Stream {
             if (getMethodDescriptor().isServerStream()) {
                 return;
             }
+            //异步关闭输出消息观察者
             execute(() -> outboundMessageSubscriber().onCompleted());
         }
     }

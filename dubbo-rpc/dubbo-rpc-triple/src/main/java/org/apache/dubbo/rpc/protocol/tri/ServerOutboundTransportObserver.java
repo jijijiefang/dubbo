@@ -26,6 +26,9 @@ import org.apache.dubbo.rpc.protocol.tri.command.HeaderQueueCommand;
 import io.netty.handler.codec.http2.DefaultHttp2Headers;
 import io.netty.handler.codec.http2.Http2Headers;
 
+/**
+ * 服务端输出传输观察者
+ */
 public class ServerOutboundTransportObserver extends OutboundTransportObserver {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerOutboundTransportObserver.class);

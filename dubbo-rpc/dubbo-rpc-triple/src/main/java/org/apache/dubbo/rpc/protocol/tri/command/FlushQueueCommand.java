@@ -20,6 +20,9 @@ package org.apache.dubbo.rpc.protocol.tri.command;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 
+/**
+ * 刷写队列命令
+ */
 public class FlushQueueCommand extends QueuedCommand.AbstractQueuedCommand {
 
     @Override

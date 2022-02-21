@@ -25,6 +25,9 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * 端口统一交换器
+ */
 public class PortUnificationExchanger {
 
     private static final Logger log = LoggerFactory.getLogger(PortUnificationExchanger.class);

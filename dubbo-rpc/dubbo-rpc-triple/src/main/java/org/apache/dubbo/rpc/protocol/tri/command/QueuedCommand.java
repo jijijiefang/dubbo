@@ -21,6 +21,9 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 
+/**
+ * 队列命令
+ */
 public interface QueuedCommand {
 
     void setFlush(boolean flush);

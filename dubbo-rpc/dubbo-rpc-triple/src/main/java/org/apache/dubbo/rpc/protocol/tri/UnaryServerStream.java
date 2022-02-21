@@ -45,6 +45,9 @@ public class UnaryServerStream extends AbstractServerStream implements Stream {
         return new UnaryServerTransportObserver();
     }
 
+    /**
+     * 服务器传输观察者
+     */
     private class UnaryServerTransportObserver extends ServerUnaryInboundTransportObserver {
         @Override
         public void onError(GrpcStatus status) {
@@ -63,6 +66,9 @@ public class UnaryServerStream extends AbstractServerStream implements Stream {
             });
         }
 
+        /**
+         * 进行本地方法调用
+         */
         public void invoke() {
             RpcInvocation invocation = buildUnaryInvocation(getHeaders(), getData());
             if (invocation == null) {
@@ -82,15 +88,18 @@ public class UnaryServerStream extends AbstractServerStream implements Stream {
                     return;
                 }
                 Metadata metadata = createResponseMeta();
+                //向输出传输观察者写HEADERS数据,设置endStream=false
                 outboundTransportObserver().onMetadata(metadata, false);
                 final byte[] data = encodeResponse(response.getValue());
                 if (data == null) {
                     // already handled in encodeResponse()
                     return;
                 }
+                //向输出传输观察者写响应DATA数据,设置endStream=false
                 outboundTransportObserver().onData(data, false);
                 Metadata trailers = TripleConstant.getSuccessResponseMeta();
                 convertAttachment(trailers, response.getObjectAttachments());
+                //向输出传输观察者写HEADERS数据，设置endStream=true
                 outboundTransportObserver().onMetadata(trailers, true);
             });
             RpcContext.removeContext();

@@ -24,6 +24,9 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http2.DefaultHttp2ResetFrame;
 import io.netty.handler.codec.http2.Http2Error;
 
+/**
+ * 取消队列命令
+ */
 public class CancelQueueCommand extends QueuedCommand.AbstractQueuedCommand {
 
     private final GrpcStatus status;

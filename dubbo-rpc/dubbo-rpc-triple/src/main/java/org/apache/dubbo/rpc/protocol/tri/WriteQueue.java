@@ -26,6 +26,9 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * 写入队列
+ */
 public class WriteQueue {
 
     static final int DEQUE_CHUNK_SIZE = 128;
@@ -39,6 +42,12 @@ public class WriteQueue {
         scheduled = new AtomicBoolean(false);
     }
 
+    /**
+     * 进队
+     * @param command
+     * @param flush 是否刷写
+     * @return
+     */
     public ChannelPromise enqueue(QueuedCommand command, boolean flush) {
         ChannelPromise promise = command.promise();
         if (promise == null) {
@@ -52,23 +61,31 @@ public class WriteQueue {
         return promise;
     }
 
+    /**
+     * 周期性刷写
+     */
     public void scheduleFlush() {
         if (scheduled.compareAndSet(false, true)) {
             channel.eventLoop().execute(this::flush);
         }
     }
 
+    /**
+     * 刷写操作
+     */
     private void flush() {
         try {
             QueuedCommand cmd;
             int i = 0;
             boolean flushedOnce = false;
             while ((cmd = queue.poll()) != null) {
+                //向channel写入
                 cmd.run(channel);
                 i++;
                 if (i == DEQUE_CHUNK_SIZE) {
                     i = 0;
                     cmd.setFlush(true);
+                    //刷写
                     channel.flush();
                     flushedOnce = true;
                 }

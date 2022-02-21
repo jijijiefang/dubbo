@@ -25,6 +25,9 @@ import io.netty.handler.codec.ReplayingDecoder;
 
 import java.util.List;
 
+/**
+ * grpc数据解码器
+ */
 public class GrpcDataDecoder extends ReplayingDecoder<GrpcDataDecoder.GrpcDecodeState> {
     private static final Logger LOGGER = LoggerFactory.getLogger(GrpcDataDecoder.class);
     private static final int RESERVED_MASK = 0xFE;
@@ -48,18 +51,27 @@ public class GrpcDataDecoder extends ReplayingDecoder<GrpcDataDecoder.GrpcDecode
         ctx.close();
     }
 
+    /**
+     * 解码
+     * @param ctx
+     * @param in
+     * @param out
+     * @throws Exception
+     */
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         switch (state()) {
+            //请求头
             case HEADER:
                 int type = in.readByte();
+                //gRPC帧头格式错误：保留位不为零
                 if ((type & RESERVED_MASK) != 0) {
                     throw GrpcStatus.fromCode(GrpcStatus.Code.INTERNAL)
                         .withDescription("gRPC frame header malformed: reserved bits not zero")
                         .asException();
                 }
                 compressedFlag = (type & COMPRESSED_FLAG_MASK) != 0;
-
+                //读取数据长度超长
                 len = in.readInt();
                 if (len < 0 || len > maxDataSize) {
                     throw GrpcStatus.fromCode(GrpcStatus.Code.RESOURCE_EXHAUSTED)
@@ -68,9 +80,11 @@ public class GrpcDataDecoder extends ReplayingDecoder<GrpcDataDecoder.GrpcDecode
                         .asException();
                 }
                 checkpoint(GrpcDecodeState.PAYLOAD);
+            //请求体
             case PAYLOAD:
                 byte[] dst = new byte[len];
                 in.readBytes(dst);
+                //解压数据
                 out.add(this.decompressData(dst, ctx));
                 checkpoint(GrpcDecodeState.HEADER);
                 break;
@@ -79,10 +93,17 @@ public class GrpcDataDecoder extends ReplayingDecoder<GrpcDataDecoder.GrpcDecode
         }
     }
 
+    /**
+     * 解压数据
+     * @param data
+     * @param ctx
+     * @return
+     */
     private byte[] decompressData(byte[] data, ChannelHandlerContext ctx) {
         if (!compressedFlag) {
             return data;
         }
+        //获取压缩器
         Compressor compressor = getDeCompressor(ctx, client);
         if (null == compressor) {
             throw GrpcStatus.fromCode(GrpcStatus.Code.UNIMPLEMENTED)

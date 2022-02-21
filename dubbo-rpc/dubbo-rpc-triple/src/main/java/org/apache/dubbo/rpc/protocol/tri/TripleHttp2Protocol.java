@@ -41,6 +41,9 @@ import static org.apache.dubbo.rpc.Constants.H2_SETTINGS_MAX_CONCURRENT_STREAMS_
 import static org.apache.dubbo.rpc.Constants.H2_SETTINGS_MAX_FRAME_SIZE_KEY;
 import static org.apache.dubbo.rpc.Constants.H2_SETTINGS_MAX_HEADER_LIST_SIZE_KEY;
 
+/**
+ * Triple Http2协议
+ */
 @Activate
 public class TripleHttp2Protocol extends Http2WireProtocol implements ScopeModelAware {
     private FrameworkModel frameworkModel;
@@ -61,17 +64,24 @@ public class TripleHttp2Protocol extends Http2WireProtocol implements ScopeModel
         super.close();
     }
 
+    /**
+     * 配置服务端pipeline
+     * @param url
+     * @param pipeline
+     * @param sslContext
+     */
     @Override
     public void configServerPipeline(URL url, ChannelPipeline pipeline, SslContext sslContext) {
         final Configuration config = ConfigurationUtils.getGlobalConfiguration(applicationModel);
+        //http2帧编解码器
         final Http2FrameCodec codec = Http2FrameCodecBuilder.forServer()
-            .gracefulShutdownTimeoutMillis(10000)
-            .initialSettings(new Http2Settings()
-                .headerTableSize(config.getInt(H2_SETTINGS_HEADER_TABLE_SIZE_KEY, 4096))
-                .maxConcurrentStreams(config.getInt(H2_SETTINGS_MAX_CONCURRENT_STREAMS_KEY, Integer.MAX_VALUE))
-                .initialWindowSize(config.getInt(H2_SETTINGS_INITIAL_WINDOW_SIZE_KEY, 1 << 20))
-                .maxFrameSize(config.getInt(H2_SETTINGS_MAX_FRAME_SIZE_KEY, 2 << 14))
-                .maxHeaderListSize(config.getInt(H2_SETTINGS_MAX_HEADER_LIST_SIZE_KEY, 8192)))
+            .gracefulShutdownTimeoutMillis(10000)//正常关机超时毫秒数
+            .initialSettings(new Http2Settings()//初始化设置
+                .headerTableSize(config.getInt(H2_SETTINGS_HEADER_TABLE_SIZE_KEY, 4096))//"dubbo.rpc.tri.header-table-size"
+                .maxConcurrentStreams(config.getInt(H2_SETTINGS_MAX_CONCURRENT_STREAMS_KEY, Integer.MAX_VALUE))//"dubbo.rpc.tri.max-concurrent-streams"
+                .initialWindowSize(config.getInt(H2_SETTINGS_INITIAL_WINDOW_SIZE_KEY, 1 << 20))//"dubbo.rpc.tri.initial-window-size"
+                .maxFrameSize(config.getInt(H2_SETTINGS_MAX_FRAME_SIZE_KEY, 2 << 14))//"dubbo.rpc.tri.max-frame-size"
+                .maxHeaderListSize(config.getInt(H2_SETTINGS_MAX_HEADER_LIST_SIZE_KEY, 8192)))//"dubbo.rpc.tri.max-header-list-size"
             .frameLogger(SERVER_LOGGER)
             .build();
         final Http2MultiplexHandler handler = new Http2MultiplexHandler(new ChannelInitializer<Channel>() {
@@ -79,28 +89,34 @@ public class TripleHttp2Protocol extends Http2WireProtocol implements ScopeModel
             @Override
             protected void initChannel(Channel ch) {
                 final ChannelPipeline p = ch.pipeline();
-                p.addLast(new TripleCommandOutBoundHandler());
-                p.addLast(new TripleHttp2FrameServerHandler(frameworkModel));
+                p.addLast(new TripleCommandOutBoundHandler());//Triple命令输出处理类
+                p.addLast(new TripleHttp2FrameServerHandler(frameworkModel));//TripleHttp2帧服务端处理类
                 // TODO constraint MAX DATA_SIZE
-                p.addLast(new GrpcDataDecoder(Integer.MAX_VALUE, false));
+                p.addLast(new GrpcDataDecoder(Integer.MAX_VALUE, false));//gRPC数据解码器
                 p.addLast(new TripleServerInboundHandler());
             }
         });
         pipeline.addLast(codec, new TripleServerConnectionHandler(), handler);
     }
 
+    /**
+     * 配置客户端pipeline
+     * @param url
+     * @param pipeline
+     * @param sslContext
+     */
     @Override
     public void configClientPipeline(URL url, ChannelPipeline pipeline, SslContext sslContext) {
         final Configuration config = ConfigurationUtils.getGlobalConfiguration(applicationModel);
         final Http2FrameCodec codec = Http2FrameCodecBuilder.forClient()
-            .gracefulShutdownTimeoutMillis(10000)
-            .initialSettings(new Http2Settings()
-                .headerTableSize(config.getInt(H2_SETTINGS_HEADER_TABLE_SIZE_KEY, 4096))
-                .pushEnabled(config.getBoolean(H2_SETTINGS_ENABLE_PUSH_KEY, false))
-                .maxConcurrentStreams(config.getInt(H2_SETTINGS_MAX_CONCURRENT_STREAMS_KEY, Integer.MAX_VALUE))
-                .initialWindowSize(config.getInt(H2_SETTINGS_INITIAL_WINDOW_SIZE_KEY, 1 << 20))
-                .maxFrameSize(config.getInt(H2_SETTINGS_MAX_FRAME_SIZE_KEY, 2 << 14))
-                .maxHeaderListSize(config.getInt(H2_SETTINGS_MAX_HEADER_LIST_SIZE_KEY, 8192)))
+            .gracefulShutdownTimeoutMillis(10000)//正常关机超时毫秒数
+            .initialSettings(new Http2Settings()//初始化设置
+                .headerTableSize(config.getInt(H2_SETTINGS_HEADER_TABLE_SIZE_KEY, 4096))//"dubbo.rpc.tri.header-table-size"
+                .pushEnabled(config.getBoolean(H2_SETTINGS_ENABLE_PUSH_KEY, false))//"dubbo.rpc.tri.enable-push"
+                .maxConcurrentStreams(config.getInt(H2_SETTINGS_MAX_CONCURRENT_STREAMS_KEY, Integer.MAX_VALUE))//"dubbo.rpc.tri.max-concurrent-streams"
+                .initialWindowSize(config.getInt(H2_SETTINGS_INITIAL_WINDOW_SIZE_KEY, 1 << 20))//"dubbo.rpc.tri.initial-window-size"
+                .maxFrameSize(config.getInt(H2_SETTINGS_MAX_FRAME_SIZE_KEY, 2 << 14))//"dubbo.rpc.tri.max-frame-size"
+                .maxHeaderListSize(config.getInt(H2_SETTINGS_MAX_HEADER_LIST_SIZE_KEY, 8192)))//"dubbo.rpc.tri.max-header-list-size"
             .frameLogger(CLIENT_LOGGER)
             .build();
         final Http2MultiplexHandler handler = new Http2MultiplexHandler(new TripleClientHandler(frameworkModel));

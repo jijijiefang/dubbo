@@ -27,6 +27,9 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.util.List;
 
+/**
+ * 端口统一服务器handler
+ */
 public class PortUnificationServerHandler extends ByteToMessageDecoder {
 
     private final SslContext sslCtx;
@@ -65,9 +68,16 @@ public class PortUnificationServerHandler extends ByteToMessageDecoder {
         channels.remove(ctx.channel());
     }
 
+    /**
+     * 服务端解码
+     * @param ctx
+     * @param in
+     * @param out
+     * @throws Exception
+     */
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        // Will use the first five bytes to detect a protocol.
+        // Will use the first five bytes to detect a protocol. 使用前五个字节检测协议
         if (in.readableBytes() < 5) {
             return;
         }
@@ -80,7 +90,9 @@ public class PortUnificationServerHandler extends ByteToMessageDecoder {
                 case UNRECOGNIZED:
                     continue;
                 case RECOGNIZED:
+                    //配置服务端pipeline
                     protocol.configServerPipeline(url, ctx.pipeline(), sslCtx);
+                    //配置完成之后pipeline移除当前处理类
                     ctx.pipeline().remove(this);
                 case NEED_MORE_DATA:
                     return;

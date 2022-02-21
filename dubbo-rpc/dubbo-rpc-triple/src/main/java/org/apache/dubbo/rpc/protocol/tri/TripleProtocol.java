@@ -37,6 +37,9 @@ import grpc.health.v1.HealthCheckResponse;
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_CLIENT_THREADPOOL;
 import static org.apache.dubbo.common.constants.CommonConstants.THREADPOOL_KEY;
 
+/**
+ * dubbo第三代协议
+ */
 public class TripleProtocol extends AbstractProtocol implements Protocol {
 
     private static final Logger logger = LoggerFactory.getLogger(TripleProtocol.class);
@@ -53,6 +56,13 @@ public class TripleProtocol extends AbstractProtocol implements Protocol {
         return 50051;
     }
 
+    /**
+     * 服务导出
+     * @param invoker Service invoker
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         URL url = invoker.getUrl();
@@ -73,10 +83,10 @@ public class TripleProtocol extends AbstractProtocol implements Protocol {
         pathResolver.add(url.getServiceKey(), invoker);
         pathResolver.add(url.getServiceInterface(), invoker);
 
-        // set service status
+        // set service status 设置服务状态
         triBuiltinService.getHealthStatusManager().setStatus(url.getServiceKey(), HealthCheckResponse.ServingStatus.SERVING);
         triBuiltinService.getHealthStatusManager().setStatus(url.getServiceInterface(), HealthCheckResponse.ServingStatus.SERVING);
-
+        //启动Netty服务端
         PortUnificationExchanger.bind(invoker.getUrl());
         return exporter;
     }

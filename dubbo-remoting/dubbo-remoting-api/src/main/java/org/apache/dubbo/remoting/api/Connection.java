@@ -54,6 +54,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.SSL_ENABLED_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.THREADPOOL_KEY;
 import static org.apache.dubbo.remoting.api.NettyEventLoopFactory.socketChannelClass;
 
+/**
+ * Triple客户端连接
+ */
 public class Connection extends AbstractReferenceCounted {
 
     public static final AttributeKey<Connection> CONNECTION = AttributeKey.valueOf("connection");
@@ -89,6 +92,10 @@ public class Connection extends AbstractReferenceCounted {
         return closePromise;
     }
 
+    /**
+     * 初始化Netty客户端
+     * @return
+     */
     private Bootstrap create() {
         final Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(NettyEventLoopFactory.NIO_EVENT_LOOP_GROUP.get())
@@ -121,6 +128,10 @@ public class Connection extends AbstractReferenceCounted {
         return bootstrap;
     }
 
+    /**
+     * 连接到服务端
+     * @return
+     */
     public ChannelFuture connect() {
         if (isClosed()) {
             if (logger.isDebugEnabled()) {
@@ -162,6 +173,10 @@ public class Connection extends AbstractReferenceCounted {
         }
     }
 
+    /**
+     * 连接成功后操作
+     * @param channel
+     */
     public void onConnected(Channel channel) {
         if (isClosed()) {
             channel.close();
@@ -171,7 +186,7 @@ public class Connection extends AbstractReferenceCounted {
             return;
         }
         this.channel.set(channel);
-        // This indicates that the connection is available.
+        // This indicates that the connection is available. 这表示连接可用
         if (this.connectingPromise != null) {
             this.connectingPromise.setSuccess(CONNECTED_OBJECT);
         }
@@ -181,6 +196,10 @@ public class Connection extends AbstractReferenceCounted {
         }
     }
 
+    /**
+     * 连接是否可用
+     * @return
+     */
     public boolean isAvailable() {
         if (isClosed()) {
             return false;

@@ -60,6 +60,7 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 /**
  * TripleInvoker
+ * 第三代协议Invoker
  */
 public class TripleInvoker<T> extends AbstractInvoker<T> {
 

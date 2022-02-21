@@ -19,12 +19,17 @@ package org.apache.dubbo.rpc.protocol.tri;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+/**
+ * Triple服务端输入处理类
+ */
 public class TripleServerInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        //服务端流
         final AbstractServerStream serverStream = ctx.channel().attr(TripleConstant.SERVER_STREAM_KEY).get();
         final byte[] data = (byte[]) msg;
         if (serverStream != null) {
+            //服务端流输入传输观察者
             serverStream.inboundTransportObserver()
                 .onData(data, false);
         }

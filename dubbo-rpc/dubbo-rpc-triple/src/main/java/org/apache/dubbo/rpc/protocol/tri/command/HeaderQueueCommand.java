@@ -25,6 +25,9 @@ import io.netty.handler.codec.http2.DefaultHttp2Headers;
 import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame;
 import io.netty.handler.codec.http2.Http2Headers;
 
+/**
+ * 数据头队列命令
+ */
 public class HeaderQueueCommand extends QueuedCommand.AbstractQueuedCommand {
 
     private final Http2Headers headers;

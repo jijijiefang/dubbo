@@ -53,6 +53,7 @@ import static org.apache.dubbo.remoting.Constants.EVENT_LOOP_WORKER_POOL_NAME;
 
 /**
  * PortUnificationServer.
+ * 端口统一服务器
  */
 public class PortUnificationServer {
 
@@ -99,6 +100,7 @@ public class PortUnificationServer {
 
     /**
      * Init and start netty server
+     * 初始化并启动netty服务端
      */
     protected void doOpen() {
         bootstrap = new ServerBootstrap();

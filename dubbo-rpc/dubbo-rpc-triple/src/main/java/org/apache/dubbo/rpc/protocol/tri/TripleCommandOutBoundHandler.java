@@ -23,6 +23,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 
+/**
+ * Triple命令外出处理类
+ */
 public class TripleCommandOutBoundHandler extends ChannelOutboundHandlerAdapter {
 
     @Override
