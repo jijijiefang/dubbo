@@ -35,6 +35,7 @@ import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_TIMES_KEY;
 
 /**
  * AbstractRetryTask
+ * 重试任务抽象类
  */
 public abstract class AbstractRetryTask implements TimerTask {
 

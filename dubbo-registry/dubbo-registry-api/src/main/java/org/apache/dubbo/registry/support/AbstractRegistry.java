@@ -69,30 +69,35 @@ import static org.apache.dubbo.registry.Constants.USER_HOME;
 
 /**
  * AbstractRegistry. (SPI, Prototype, ThreadSafe)
+ * 抽象注册表
  */
 public abstract class AbstractRegistry implements Registry {
 
-    // URL address separator, used in file cache, service provider URL separation
+    // URL address separator, used in file cache, service provider URL separation URL地址分隔符，用于文件缓存、服务提供商URL分隔
     private static final char URL_SEPARATOR = ' ';
-    // URL address separated regular expression for parsing the service provider URL list in the file cache
+    // URL address separated regular expression for parsing the service provider URL list in the file cache URL地址分隔的正则表达式，用于解析文件缓存中的服务提供商URL列表
     private static final String URL_SPLIT = "\\s+";
-    // Max times to retry to save properties to local cache file
+    // Max times to retry to save properties to local cache file 属性保存到本地缓存文件的最大重试次数
     private static final int MAX_RETRY_TIMES_SAVE_PROPERTIES = 3;
     // Log output
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     // Local disk cache, where the special key value.registries records the list of registry centers, and the others are the list of notified service providers
+    // 本地磁盘缓存，其中包含特殊的键值。注册中心记录注册中心的列表，其他的是通知服务提供商的列表
     private final Properties properties = new Properties();
-    // File cache timing writing
+    // File cache timing writing 文件缓存定时写入
     private final ExecutorService registryCacheExecutor;
     private final AtomicLong lastCacheChanged = new AtomicLong();
     private final AtomicInteger savePropertiesRetryTimes = new AtomicInteger();
+    //注册的集合
     private final Set<URL> registered = new ConcurrentHashSet<>();
+    //订阅的集合
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<>();
+    //通知的集合
     private final ConcurrentMap<URL, Map<String, List<URL>>> notified = new ConcurrentHashMap<>();
-    // Is it synchronized to save the file
+    // Is it synchronized to save the file 是否同步保存文件
     private boolean syncSaveFile;
     private URL registryUrl;
-    // Local disk cache file
+    // Local disk cache file 本地磁盘缓存文件
     private File file;
     private boolean localCacheEnabled;
     protected RegistryManager registryManager;
@@ -101,10 +106,11 @@ public abstract class AbstractRegistry implements Registry {
     public AbstractRegistry(URL url) {
         setUrl(url);
         registryManager = url.getOrDefaultApplicationModel().getBeanFactory().getBean(RegistryManager.class);
+        //本地缓存是否启用
         localCacheEnabled = url.getParameter(REGISTRY_LOCAL_FILE_CACHE_ENABLED, true);
         registryCacheExecutor = url.getOrDefaultApplicationModel().getDefaultExtension(ExecutorRepository.class).getSharedExecutor();
         if (localCacheEnabled) {
-            // Start file save timer
+            // Start file save timer 启动文件保存定时任务
             syncSaveFile = url.getParameter(REGISTRY_FILESAVE_SYNC_KEY, false);
             String defaultFilename = System.getProperty(USER_HOME) + DUBBO_REGISTRY +
                 url.getApplication() + "-" + url.getAddress().replaceAll(":", "-") + CACHE;
@@ -119,7 +125,7 @@ public abstract class AbstractRegistry implements Registry {
                 }
             }
             this.file = file;
-            // When starting the subscription center,
+            // When starting the subscription center, 启动订阅中心时，我们需要读取本地缓存文件，以便将来进行注册表容错处理
             // we need to read the local cache file for future Registry fault tolerance processing.
             loadProperties();
             notify(url.getBackupUrls());
@@ -171,6 +177,10 @@ public abstract class AbstractRegistry implements Registry {
         return lastCacheChanged;
     }
 
+    /**
+     * 进行保存注册中心数据
+     * @param version
+     */
     public void doSaveProperties(long version) {
         if (version < lastCacheChanged.get()) {
             return;
@@ -181,25 +191,31 @@ public abstract class AbstractRegistry implements Registry {
         // Save
         File lockfile = null;
         try {
+            //锁文件
             lockfile = new File(file.getAbsolutePath() + ".lock");
+            //锁文件不存在则创建
             if (!lockfile.exists()) {
                 lockfile.createNewFile();
             }
             try (RandomAccessFile raf = new RandomAccessFile(lockfile, "rw");
                 FileChannel channel = raf.getChannel()) {
+                //加锁
                 FileLock lock = channel.tryLock();
                 if (lock == null) {
                     throw new IOException("Can not lock the registry cache file " + file.getAbsolutePath() + ", ignore and retry later, maybe multi java process use the file, please config: dubbo.registry.file=xxx.properties");
                 }
                 // Save
                 try {
+                    //本地缓存文件不存在则创建
                     if (!file.exists()) {
                         file.createNewFile();
                     }
                     try (FileOutputStream outputFile = new FileOutputStream(file)) {
+                        //注册中心本地缓存
                         properties.store(outputFile, "Dubbo Registry Cache");
                     }
                 } finally {
+                    //释放锁
                     lock.release();
                 }
             }
@@ -219,11 +235,15 @@ public abstract class AbstractRegistry implements Registry {
             logger.warn("Failed to save registry cache file, will retry, cause: " + e.getMessage(), e);
         } finally {
             if (lockfile != null) {
+                //删除锁文件
                 lockfile.delete();
             }
         }
     }
 
+    /**
+     * 从本地文件加载
+     */
     private void loadProperties() {
         if (file != null && file.exists()) {
             InputStream in = null;
@@ -303,6 +323,7 @@ public abstract class AbstractRegistry implements Registry {
                 logger.info("Register: " + url);
             }
         }
+        //放入集合
         registered.add(url);
     }
 
@@ -330,6 +351,7 @@ public abstract class AbstractRegistry implements Registry {
         if (logger.isInfoEnabled()) {
             logger.info("Subscribe: " + url);
         }
+        //初始化子节点监听器
         Set<NotifyListener> listeners = subscribed.computeIfAbsent(url, n -> new ConcurrentHashSet<>());
         listeners.add(listener);
     }
@@ -407,7 +429,7 @@ public abstract class AbstractRegistry implements Registry {
 
     /**
      * Notify changes from the Provider side.
-     *
+     * 通知来自提供方的变化
      * @param url      consumer side url
      * @param listener listener
      * @param urls     provider latest urls
@@ -427,7 +449,7 @@ public abstract class AbstractRegistry implements Registry {
         if (logger.isInfoEnabled()) {
             logger.info("Notify urls for subscribe url " + url + ", url size: " + urls.size());
         }
-        // keep every provider's category.
+        // keep every provider's category. 保存每个提供者的类别
         Map<String, List<URL>> result = new HashMap<>();
         for (URL u : urls) {
             if (UrlUtils.isMatch(url, u)) {
@@ -439,20 +461,27 @@ public abstract class AbstractRegistry implements Registry {
         if (result.size() == 0) {
             return;
         }
+        //放入已通知的集合
         Map<String, List<URL>> categoryNotified = notified.computeIfAbsent(url, u -> new ConcurrentHashMap<>());
         for (Map.Entry<String, List<URL>> entry : result.entrySet()) {
             String category = entry.getKey();
             List<URL> categoryList = entry.getValue();
             categoryNotified.put(category, categoryList);
+            //RegistryDirectory#notify
             listener.notify(categoryList);
-            // We will update our cache file after each notification.
-            // When our Registry has a subscribe failure due to network jitter, we can return at least the existing cache URL.
+            // We will update our cache file after each notification. 将在每次通知后更新缓存文件。
+            // When our Registry has a subscribe failure due to network jitter, we can return at least the existing cache URL.当我们的注册表由于网络抖动导致订阅失败时，我们至少可以返回现有的缓存URL
             if (localCacheEnabled) {
+                //保存至本地缓存
                 saveProperties(url);
             }
         }
     }
 
+    /**
+     * 保存到本地缓存
+     * @param url
+     */
     private void saveProperties(URL url) {
         if (file == null) {
             return;
@@ -471,8 +500,10 @@ public abstract class AbstractRegistry implements Registry {
                     }
                 }
             }
+            //添加到properties中
             properties.setProperty(url.getServiceKey(), buf.toString());
             long version = lastCacheChanged.incrementAndGet();
+            //同步缓存至本地文件
             if (syncSaveFile) {
                 doSaveProperties(version);
             } else {

@@ -24,6 +24,7 @@ import org.apache.dubbo.registry.support.FailbackRegistry;
 
 /**
  * FailedSubscribedTask
+ * 订阅失败任务
  */
 public final class FailedSubscribedTask extends AbstractRetryTask {
 

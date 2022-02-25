@@ -42,17 +42,18 @@ import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_PERIOD_KEY;
 
 /**
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
+ * 容错重试注册表
  */
 public abstract class FailbackRegistry extends AbstractRegistry {
 
     /*  retry task map */
-
+    //注册失败集合
     private final ConcurrentMap<URL, FailedRegisteredTask> failedRegistered = new ConcurrentHashMap<URL, FailedRegisteredTask>();
-
+    //取消注册失败集合
     private final ConcurrentMap<URL, FailedUnregisteredTask> failedUnregistered = new ConcurrentHashMap<URL, FailedUnregisteredTask>();
-
+    //关注失败集合
     private final ConcurrentMap<Holder, FailedSubscribedTask> failedSubscribed = new ConcurrentHashMap<Holder, FailedSubscribedTask>();
-
+    //取消关注失败集合
     private final ConcurrentMap<Holder, FailedUnsubscribedTask> failedUnsubscribed = new ConcurrentHashMap<Holder, FailedUnsubscribedTask>();
 
     /**
@@ -67,7 +68,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         super(url);
         this.retryPeriod = url.getParameter(REGISTRY_RETRY_PERIOD_KEY, DEFAULT_REGISTRY_RETRY_PERIOD);
 
-        // since the retry task will not be very much. 128 ticks is enough.
+        // since the retry task will not be very much. 128 ticks is enough. 重试任务不会太多，128够用
         retryTimer = new HashedWheelTimer(new NamedThreadFactory("DubboRegistryRetryTimer", true), retryPeriod, TimeUnit.MILLISECONDS, 128);
     }
 
@@ -89,6 +90,10 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         failedUnsubscribed.remove(h);
     }
 
+    /**
+     * 添加注册失败任务
+     * @param url
+     */
     private void addFailedRegistered(URL url) {
         FailedRegisteredTask oldOne = failedRegistered.get(url);
         if (oldOne != null) {
@@ -97,7 +102,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         FailedRegisteredTask newTask = new FailedRegisteredTask(url, this);
         oldOne = failedRegistered.putIfAbsent(url, newTask);
         if (oldOne == null) {
-            // never has a retry task. then start a new task for retry.
+            // never has a retry task. then start a new task for retry. 从来没有重试任务。然后启动一个新任务以重试
             retryTimer.newTimeout(newTask, retryPeriod, TimeUnit.MILLISECONDS);
         }
     }
@@ -129,6 +134,11 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    /**
+     * 添加至订阅失败集合
+     * @param url
+     * @param listener
+     */
     protected void addFailedSubscribed(URL url, NotifyListener listener) {
         Holder h = new Holder(url, listener);
         FailedSubscribedTask oldOne = failedSubscribed.get(h);
@@ -202,7 +212,9 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             return;
         }
         super.register(url);
+        //删除此URL注册失败任务
         removeFailedRegistered(url);
+        //删除此URL取消注册失败任务
         removeFailedUnregistered(url);
         try {
             // Sending a registration request to the server side 发送注册请求到服务端
@@ -224,7 +236,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
                 logger.error("Failed to register " + url + ", waiting for retry, cause: " + t.getMessage(), t);
             }
 
-            // Record a failed registration request to a failed list, retry regularly
+            // Record a failed registration request to a failed list, retry regularly 将失败的注册请求记录到失败列表中，定期重试
             addFailedRegistered(url);
         }
     }
@@ -298,13 +310,14 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         super.subscribe(url, listener);
         removeFailedSubscribed(url, listener);
         try {
-            // Sending a subscription request to the server side
+            // Sending a subscription request to the server side 向服务器端发送订阅请求
             doSubscribe(url, listener);
         } catch (Exception e) {
             Throwable t = e;
 
             List<URL> urls = getCacheUrls(url);
             if (CollectionUtils.isNotEmpty(urls)) {
+                //进行通知
                 notify(url, listener, urls);
                 logger.error("Failed to subscribe " + url + ", Using cached list: " + urls + " from cache file: " + getUrl().getParameter(FILE_KEY, System.getProperty("user.home") + "/dubbo-registry-" + url.getHost() + ".cache") + ", cause: " + t.getMessage(), t);
             } else {
@@ -322,7 +335,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
                 }
             }
 
-            // Record a failed registration request to a failed list, retry regularly
+            // Record a failed registration request to a failed list, retry regularly 将失败的注册请求记录到失败列表中，定期重试
             addFailedSubscribed(url, listener);
         }
     }
@@ -384,7 +397,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
                 logger.info("Recover register url " + recoverRegistered);
             }
             for (URL url : recoverRegistered) {
-                // remove fail registry or unRegistry task first.
+                // remove fail registry or unRegistry task first. 删除失败的注册表或取消注册的任务
                 removeFailedRegistered(url);
                 removeFailedUnregistered(url);
                 addFailedRegistered(url);

@@ -54,19 +54,20 @@ import static org.apache.dubbo.common.constants.RegistryConstants.ROUTERS_CATEGO
 
 /**
  * ZookeeperRegistry
+ * Zookeeper注册中心
  */
 public class ZookeeperRegistry extends CacheableFailbackRegistry {
 
     private final static Logger logger = LoggerFactory.getLogger(ZookeeperRegistry.class);
 
     private final static String DEFAULT_ROOT = "dubbo";
-
+    //根节点路径
     private final String root;
-
+     //所有服务集合
     private final Set<String> anyServices = new ConcurrentHashSet<>();
-
+    //ZK监听器
     private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners = new ConcurrentHashMap<>();
-
+    //ZK客户端
     private ZookeeperClient zkClient;
 
     public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
@@ -78,14 +79,17 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         if (!group.startsWith(PATH_SEPARATOR)) {
             group = PATH_SEPARATOR + group;
         }
+        //根路径
         this.root = group;
         zkClient = zookeeperTransporter.connect(url);
         zkClient.addStateListener((state) -> {
+            //重新连接
             if (state == StateListener.RECONNECTED) {
                 logger.warn("Trying to fetch the latest urls, in case there're provider changes during connection loss.\n" +
                     " Since ephemeral ZNode will not get deleted for a connection lose, " +
                     "there's no need to re-register url of this instance.");
                 ZookeeperRegistry.this.fetchLatestAddresses();
+            //创建新会话
             } else if (state == StateListener.NEW_SESSION_CREATED) {
                 logger.warn("Trying to re-register urls and re-subscribe listeners of this instance to registry...");
                 try {
@@ -93,11 +97,13 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }
+            //会话丢失
             } else if (state == StateListener.SESSION_LOST) {
                 logger.warn("Url of this instance will be deleted from registry soon. " +
                     "Dubbo client will try to re-register once a new session is created.");
+            //暂停的
             } else if (state == StateListener.SUSPENDED) {
-
+            //连接的
             } else if (state == StateListener.CONNECTED) {
 
             }
@@ -123,6 +129,10 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         }
     }
 
+    /**
+     * 注册
+     * @param url
+     */
     @Override
     public void doRegister(URL url) {
         try {
@@ -133,6 +143,10 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         }
     }
 
+    /**
+     * 注销
+     * @param url
+     */
     @Override
     public void doUnregister(URL url) {
         try {
@@ -143,15 +157,23 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         }
     }
 
+    /**
+     * 订阅
+     * @param url
+     * @param listener
+     */
     @Override
     public void doSubscribe(final URL url, final NotifyListener listener) {
         try {
             checkDestroyed();
+            //所有数据
             if (ANY_VALUE.equals(url.getServiceInterface())) {
                 String root = toRootPath();
                 boolean check = url.getParameter(CHECK_KEY, false);
                 ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
+                //root路径节点变化监听器，ChildListener的方法实现
                 ChildListener zkListener = listeners.computeIfAbsent(listener, k -> (parentPath, currentChilds) -> {
+                    //遍历root路径子节点，不存在的放入集合
                     for (String child : currentChilds) {
                         child = URL.decode(child);
                         if (!anyServices.contains(child)) {
@@ -161,7 +183,9 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
                         }
                     }
                 });
+                //创建root节点
                 zkClient.create(root, false);
+                //监听根节点，根节点所有节点放入anyServices
                 List<String> services = zkClient.addChildListener(root, zkListener);
                 if (CollectionUtils.isNotEmpty(services)) {
                     for (String service : services) {
@@ -175,21 +199,26 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
                 CountDownLatch latch = new CountDownLatch(1);
                 try {
                     List<URL> urls = new ArrayList<>();
+                    //根据类别遍历
                     for (String path : toCategoriesPath(url)) {
                         ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
                         ChildListener zkListener = listeners.computeIfAbsent(listener, k -> new RegistryChildListenerImpl(url, path, k, latch));
                         if (zkListener instanceof RegistryChildListenerImpl) {
+                            //ZK监听器设置倒计门闩
                             ((RegistryChildListenerImpl) zkListener).setLatch(latch);
                         }
+                        //创建节点
                         zkClient.create(path, false);
                         List<String> children = zkClient.addChildListener(path, zkListener);
                         if (children != null) {
+                            //处理URL
                             urls.addAll(toUrlsWithEmpty(url, path, children));
                         }
                     }
+                    //通知
                     notify(url, listener, urls);
                 } finally {
-                    // tells the listener to run only after the sync notification of main thread finishes.
+                    // tells the listener to run only after the sync notification of main thread finishes. 告诉监听器仅在主线程的同步通知完成后运行
                     latch.countDown();
                 }
             }
@@ -198,6 +227,11 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         }
     }
 
+    /**
+     * 取消订阅
+     * @param url
+     * @param listener
+     */
     @Override
     public void doUnsubscribe(URL url, NotifyListener listener) {
         checkDestroyed();
@@ -205,6 +239,7 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         if (listeners != null) {
             ChildListener zkListener = listeners.remove(listener);
             if (zkListener != null) {
+                //所有的
                 if (ANY_VALUE.equals(url.getServiceInterface())) {
                     String root = toRootPath();
                     zkClient.removeChildListener(root, zkListener);
@@ -221,6 +256,11 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         }
     }
 
+    /**
+     * 查找
+     * @param url
+     * @return
+     */
     @Override
     public List<URL> lookup(URL url) {
         if (url == null) {
@@ -308,6 +348,9 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         return UrlUtils.isMatch(subscribeUrl, providerUrl);
     }
 
+    /**
+     *
+     */
     private class RegistryChildListenerImpl implements ChildListener {
         private RegistryNotifier notifier;
         private long lastExecuteTime;

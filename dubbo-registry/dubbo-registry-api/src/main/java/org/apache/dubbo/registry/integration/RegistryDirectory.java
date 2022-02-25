@@ -234,7 +234,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
                 oldUrlInvokerMap = new LinkedHashMap<>(Math.round(1 + localUrlInvokerMap.size() / DEFAULT_HASHMAP_LOAD_FACTOR));
                 localUrlInvokerMap.forEach(oldUrlInvokerMap::put);
             }
-            Map<URL, Invoker<T>> newUrlInvokerMap = toInvokers(oldUrlInvokerMap, invokerUrls);// Translate url list to Invoker map
+            Map<URL, Invoker<T>> newUrlInvokerMap = toInvokers(oldUrlInvokerMap, invokerUrls);// Translate url list to Invoker map 转换url列表为Invoker Map
 
             /**
              * If the calculation is wrong, it is not processed.
@@ -325,7 +325,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
     /**
      * Turn urls into invokers, and if url has been refer, will not re-reference.
      * the items that will be put into newUrlInvokeMap will be removed from oldUrlInvokerMap.
-     *
+     * 将url转换为调用程序，如果url已被引用，则不会重新引用。将放入newUrlInvokeMap的项目将从OldUrlInvokeMap中删除
      * @param oldUrlInvokerMap it might be modified during the process.
      * @param urls
      * @return invokers

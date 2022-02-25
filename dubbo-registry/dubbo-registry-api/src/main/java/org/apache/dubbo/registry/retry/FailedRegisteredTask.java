@@ -23,6 +23,7 @@ import org.apache.dubbo.registry.support.FailbackRegistry;
 
 /**
  * FailedRegisteredTask
+ * 注册失败重试任务
  */
 public final class FailedRegisteredTask extends AbstractRetryTask {
 

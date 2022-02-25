@@ -63,6 +63,7 @@ import static org.apache.dubbo.common.constants.RegistryConstants.PROVIDERS_CATE
 
 /**
  * Useful for registries who's sdk returns raw string as provider instance, for example, zookeeper and etcd.
+ * 缓存容错注册中心
  */
 public abstract class CacheableFailbackRegistry extends FailbackRegistry {
     private static final Logger logger = LoggerFactory.getLogger(CacheableFailbackRegistry.class);
@@ -70,9 +71,11 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
 
     protected Map<String, URLAddress> stringAddress = new ConcurrentHashMap<>();
     protected Map<String, URLParam> stringParam = new ConcurrentHashMap<>();
+    //缓存清理定时任务线程池
     private ScheduledExecutorService cacheRemovalScheduler;
     private int cacheRemovalTaskIntervalInMillis;
     private int cacheClearWaitingThresholdInMillis;
+    //等待清理的集合
     private Map<ServiceAddressURL, Long> waitForRemove = new ConcurrentHashMap<>();
     private Semaphore semaphore = new Semaphore(1);
 
@@ -107,6 +110,10 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
         this.evictURLCache(url);
     }
 
+    /**
+     * 清理URL缓存
+     * @param url
+     */
     protected void evictURLCache(URL url) {
         Map<String, ServiceAddressURL> oldURLs = stringUrls.remove(url);
         try {
@@ -128,7 +135,7 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
     }
 
     protected List<URL> toUrlsWithoutEmpty(URL consumer, Collection<String> providers) {
-        // keep old urls
+        // keep old urls 获取旧的url集合
         Map<String, ServiceAddressURL> oldURLs = stringUrls.get(consumer);
         // create new urls
         Map<String, ServiceAddressURL> newURLs;
@@ -137,6 +144,7 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
             newURLs = new HashMap<>((int) (providers.size() / 0.75f + 1));
             for (String rawProvider : providers) {
                 rawProvider = stripOffVariableKeys(rawProvider);
+                //创建URL
                 ServiceAddressURL cachedURL = createURL(rawProvider, copyOfConsumer, getExtraParameters());
                 if (cachedURL == null) {
                     logger.warn("Invalid address, failed to parse into URL " + rawProvider);
@@ -160,7 +168,7 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
                 newURLs.put(rawProvider, cachedURL);
             }
         }
-
+        //清理旧缓存
         evictURLCache(consumer);
         stringUrls.put(consumer, newURLs);
 
@@ -317,6 +325,9 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
     protected abstract boolean isMatch(URL subscribeUrl, URL providerUrl);
 
 
+    /**
+     * 缓存清理任务
+     */
     private class RemovalTask implements Runnable {
         @Override
         public void run() {
