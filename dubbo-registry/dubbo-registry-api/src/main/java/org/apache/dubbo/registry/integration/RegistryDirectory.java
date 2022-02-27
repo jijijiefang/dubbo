@@ -135,7 +135,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
         if (isDestroyed()) {
             return;
         }
-
+        //过滤
         Map<String, List<URL>> categoryUrls = urls.stream()
                 .filter(Objects::nonNull)
                 .filter(this::isValidCategory)
@@ -148,7 +148,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
         List<URL> routerURLs = categoryUrls.getOrDefault(ROUTERS_CATEGORY, Collections.emptyList());
         toRouters(routerURLs).ifPresent(this::addRouters);
 
-        // providers
+        // providers 提供者列表
         List<URL> providerURLs = categoryUrls.getOrDefault(PROVIDERS_CATEGORY, Collections.emptyList());
 
         // 3.x added for extend URL address
@@ -159,6 +159,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
                 providerURLs = addressListener.notify(providerURLs, getConsumerUrl(),this);
             }
         }
+        //刷新Invoker
         refreshOverrideAndInvoker(providerURLs);
     }
 
@@ -186,12 +187,16 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
 
     /**
      * Convert the invokerURL list to the Invoker Map. The rules of the conversion are as follows:
+     * 将invokerURL列表转换为Invoker映射。转换规则如下：
      * <ol>
      * <li> If URL has been converted to invoker, it is no longer re-referenced and obtained directly from the cache,
      * and notice that any parameter changes in the URL will be re-referenced.</li>
+     * 如果URL已转换为invoker，它将不再被重新引用并直接从缓存中获取，请注意，URL中的任何参数更改都将被重新引用。
      * <li>If the incoming invoker list is not empty, it means that it is the latest invoker list.</li>
+     * 如果传入的调用器列表不是空的，则表示它是最新的调用器列表。
      * <li>If the list of incoming invokerUrl is empty, It means that the rule is only a override rule or a route
      * rule, which needs to be re-contrasted to decide whether to re-reference.</li>
+     * 如果传入invokerUrl的列表为空，这意味着该规则只是一个覆盖规则或路由规则，需要重新对比以决定是否重新引用。
      * </ol>
      *
      * @param invokerUrls this parameter can't be null
@@ -211,14 +216,14 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
             if (invokerUrls == Collections.<URL>emptyList()) {
                 invokerUrls = new ArrayList<>();
             }
-            // use local reference to avoid NPE as this.cachedInvokerUrls will be set null by destroyAllInvokers().
+            // use local reference to avoid NPE as this.cachedInvokerUrls will be set null by destroyAllInvokers(). 使用本地引用以避免NPE。destroyAllInvokers将cachedInvokerUrls设置为空
             Set<URL> localCachedInvokerUrls = this.cachedInvokerUrls;
             if (invokerUrls.isEmpty() && localCachedInvokerUrls != null) {
                 logger.warn("Service" + serviceKey + " received empty address list with no EMPTY protocol set, trigger empty protection.");
                 invokerUrls.addAll(localCachedInvokerUrls);
             } else {
                 localCachedInvokerUrls = new HashSet<>();
-                localCachedInvokerUrls.addAll(invokerUrls);//Cached invoker urls, convenient for comparison
+                localCachedInvokerUrls.addAll(invokerUrls);//Cached invoker urls, convenient for comparison 缓存的Invoker的URL，便于比较
                 this.cachedInvokerUrls = localCachedInvokerUrls;
             }
             if (invokerUrls.isEmpty()) {
@@ -227,10 +232,10 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
 
             // use local reference to avoid NPE as this.urlInvokerMap will be set null concurrently at destroyAllInvokers().
             Map<URL, Invoker<T>> localUrlInvokerMap = this.urlInvokerMap;
-            // can't use local reference as oldUrlInvokerMap's mappings might be removed directly at toInvokers().
+            // can't use local reference as oldUrlInvokerMap's mappings might be removed directly at toInvokers(). 无法使用本地引用，因为oldUrlInvokerMap的映射可能会在toInvokers上直接删除。
             Map<URL, Invoker<T>> oldUrlInvokerMap = null;
             if (localUrlInvokerMap != null) {
-                // the initial capacity should be set greater than the maximum number of entries divided by the load factor to avoid resizing.
+                // the initial capacity should be set greater than the maximum number of entries divided by the load factor to avoid resizing. 初始容量应设置为大于最大条目数除以负载系数，以避免调整大小
                 oldUrlInvokerMap = new LinkedHashMap<>(Math.round(1 + localUrlInvokerMap.size() / DEFAULT_HASHMAP_LOAD_FACTOR));
                 localUrlInvokerMap.forEach(oldUrlInvokerMap::put);
             }
@@ -238,11 +243,13 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
 
             /**
              * If the calculation is wrong, it is not processed.
-             *
+             * 如果计算错误，则不进行处理。
              * 1. The protocol configured by the client is inconsistent with the protocol of the server.
+             * 1.客户端配置的协议与服务器的协议不一致。
              *    eg: consumer protocol = dubbo, provider only has other protocol services(rest).
+             *    例如：consumer protocol=dubbo，提供者只有其他协议服务（rest）。
              * 2. The registration center is not robust and pushes illegal specification data.
-             *
+             * 2.注册中心不健全，推送非法规格数据
              */
             if (CollectionUtils.isEmptyMap(newUrlInvokerMap)) {
                 logger.error(new IllegalStateException("urls to invokers error .invokerUrls.size :" + invokerUrls.size() + ", invoker.size :0. urls :" + invokerUrls
@@ -252,17 +259,17 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
 
             List<Invoker<T>> newInvokers = Collections.unmodifiableList(new ArrayList<>(newUrlInvokerMap.values()));
             this.setInvokers(multiGroup ? new BitList<>(toMergeInvokerList(newInvokers)) : new BitList<>(newInvokers));
-            // pre-route and build cache
+            // pre-route and build cache 预路由和构建缓存
             routerChain.setInvokers(this.getInvokers());
             this.urlInvokerMap = newUrlInvokerMap;
 
             try {
-                destroyUnusedInvokers(oldUrlInvokerMap, newUrlInvokerMap); // Close the unused Invoker
+                destroyUnusedInvokers(oldUrlInvokerMap, newUrlInvokerMap); // Close the unused Invoker 关闭未使用的Invoker
             } catch (Exception e) {
                 logger.warn("destroyUnusedInvokers error. ", e);
             }
 
-            // notify invokers refreshed
+            // notify invokers refreshed 通知调用程序刷新
             this.invokersChanged();
         }
     }
