@@ -92,13 +92,15 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
     private ReferenceConfigurationListener referenceConfigurationListener;
 
     /**
-     * Map<url, Invoker> cache service url to invoker mapping.
+     * Map<url, Invoker> cache service url to invoker mapping. 将缓存服务url映射到调用程序映射
      * The initial value is null and the midway may be assigned to null, please use the local variable reference
+     * 初始值为null，中间值可能被指定为null，请使用局部变量引用
      */
     protected volatile Map<URL, Invoker<T>> urlInvokerMap;
 
     /**
      * The initial value is null and the midway may be assigned to null, please use the local variable reference
+     * 初始值为null，中间值可能被指定为null，请使用局部变量引用
      */
     protected volatile Set<URL> cachedInvokerUrls;
     private final ApplicationModel applicationModel;
